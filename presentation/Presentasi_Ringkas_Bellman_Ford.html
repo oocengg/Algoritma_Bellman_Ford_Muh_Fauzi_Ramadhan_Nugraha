@@ -1,0 +1,1033 @@
+<title>Bellman-Ford Ringkas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=JetBrains+Mono:wght@400;600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: satu kolom bacaan selebar ~70ch, panel interaktif melebar sampai 1120px; navigasi bagian lengket di atas.
+   Ide visual: buku catatan biaya. Kertas berkisi halus, tinta biru untuk struktur, kuning tanda catatan diganti, merah untuk bobot negatif. */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --surface-2:#eaeef2; --ink:#14202b; --ink-2:#55626f; --line:#d3dae1;
+  --accent:#1f5fbf; --accent-soft:#dfe9f8; --upd:#c97a00; --upd-soft:#fbefd6; --neg:#c2362b; --neg-soft:#f9e1de;
+  --ok:#1d7f53; --ok-soft:#dcf1e6; --grid:rgba(31,95,191,.06);
+  --f-display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --f-body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f161d; --surface:#16202a; --surface-2:#1d2a36; --ink:#e4ebf2; --ink-2:#97a5b2; --line:#2b3a47;
+  --accent:#78aaff; --accent-soft:#1d3150; --upd:#f0a83a; --upd-soft:#3a2d14; --neg:#ff7468; --neg-soft:#3d1f1c;
+  --ok:#4cc38a; --ok-soft:#173326; --grid:rgba(120,170,255,.05); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f161d; --surface:#16202a; --surface-2:#1d2a36; --ink:#e4ebf2; --ink-2:#97a5b2; --line:#2b3a47;
+  --accent:#78aaff; --accent-soft:#1d3150; --upd:#f0a83a; --upd-soft:#3a2d14; --neg:#ff7468; --neg-soft:#3d1f1c;
+  --ok:#4cc38a; --ok-soft:#173326; --grid:rgba(120,170,255,.05); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1.0625rem/1.6 var(--f-body);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:clamp(16px,4vw,32px);padding-block:0 72px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;line-height:1.1;margin:0}
+h1{font-size:clamp(2.6rem,7vw,4.6rem);font-weight:800;letter-spacing:-.035em}
+h2{font-size:clamp(1.7rem,3.6vw,2.4rem);font-weight:750;letter-spacing:-.02em}
+h3{font-size:1.2rem;font-weight:700}
+p{margin:0}
+.prose{max-width:70ch;display:grid;gap:14px}
+.kicker{font:600 .78rem/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.muted{color:var(--ink-2)}
+code,.mono{font-family:var(--f-mono);font-size:.9em}
+.neg{color:var(--neg)} .upd{color:var(--upd)} .ok{color:var(--ok)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:clamp(20px,4vw,48px);align-items:center;padding-block:48px 28px}
+@media (max-width:860px){.hero{grid-template-columns:minmax(0,1fr)}}
+.hero .lead{font-size:1.2rem;max-width:46ch;margin-top:14px}
+.ledger{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;font-family:var(--f-mono);font-size:.86rem;overflow-x:auto}
+@media (max-width:520px){.ledger{font-size:.74rem;padding:12px}}
+.ledger .row{display:grid;grid-template-columns:6.4em repeat(4,minmax(5.2em,1fr));gap:6px;padding:4px 0;border-bottom:1px dashed var(--line);min-width:28em}
+.ledger .row:last-child{border-bottom:0}
+.ledger .row span{text-align:right;font-variant-numeric:tabular-nums}
+.ledger .row span:first-child{text-align:left;color:var(--ink-2)}
+.ledger .hd span{color:var(--ink-2);font-weight:600}
+.ledger .chg{color:var(--upd);font-weight:700}
+.ledger-cap{font-size:.85rem;color:var(--ink-2);margin-top:8px;font-family:var(--f-body)}
+
+/* navigasi */
+nav.toc{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);margin-inline:calc(-1*clamp(16px,4vw,32px));padding:10px clamp(16px,4vw,32px)}
+nav.toc ol{list-style:none;margin:0;padding:0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin}
+nav.toc a{display:block;white-space:nowrap;text-decoration:none;color:var(--ink-2);font:600 .85rem/1 var(--f-body);padding:8px 10px;border-radius:999px}
+nav.toc a:hover,nav.toc a.on{color:var(--ink);background:var(--surface-2)}
+
+section{padding-block:56px 8px;display:grid;gap:22px;scroll-margin-top:60px}
+.sec-head{display:grid;gap:8px}
+
+/* kotak */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:860px){.grid2,.grid3{grid-template-columns:minmax(0,1fr)}}
+.pseudo{font:400 .86rem/1.7 var(--f-mono);background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;overflow-x:auto;white-space:pre;margin:0}
+.pseudo b{color:var(--accent);font-weight:600}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:12px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:2.2em minmax(0,1fr);gap:10px;align-items:start}
+.steps li::before{counter-increment:s;content:counter(s);font:700 .9rem/2.1em var(--f-mono);text-align:center;border-radius:50%;background:var(--accent-soft);color:var(--accent);width:2.1em;height:2.1em}
+
+table.t{border-collapse:collapse;width:100%;font-size:.95rem}
+.tbl{overflow-x:auto}
+table.t th,table.t td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+table.t th{font:600 .8rem/1.3 var(--f-mono);letter-spacing:.03em;color:var(--ink-2);text-transform:uppercase}
+table.t td.num,table.t th.num{text-align:right;font-variant-numeric:tabular-nums}
+
+/* lab interaktif */
+.lab{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:920px){.lab{grid-template-columns:minmax(0,1fr)}}
+.lab-left,.lab-right{display:grid;gap:12px;min-width:0}
+.tabs{display:flex;flex-wrap:wrap;gap:8px}
+.tabs button,.chips button{font:600 .92rem/1 var(--f-body);padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.tabs button[aria-pressed="true"],.chips button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font-size:.85rem;padding:8px 12px}
+.canvas{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.canvas svg{display:block;width:100%;height:auto}
+.ctrl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{display:inline-flex;gap:6px;align-items:center;font:600 .9rem/1 var(--f-body);padding:9px 13px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn svg{width:14px;height:14px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.prog{margin-left:auto;font:400 .8rem/1 var(--f-mono);color:var(--ink-2)}
+.msg{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:var(--r);padding:12px 14px;min-height:6.2em}
+.msg.upd{border-left-color:var(--upd)} .msg.bad{border-left-color:var(--neg)} .msg.done{border-left-color:var(--ok)}
+.msg .ph{font:600 .74rem/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.msg p{margin-top:6px}
+.story{font-size:.98rem;color:var(--ink-2);max-width:70ch}
+
+/* kode */
+.code{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow-x:auto;font:400 .8rem/1.62 var(--f-mono);padding:8px 0;margin:0}
+.code .ln{display:block;white-space:pre;padding:0 12px 0 0;border-left:3px solid transparent}
+.code .ln i{display:inline-block;width:2.6em;text-align:right;padding-right:12px;color:var(--ink-2);font-style:normal;user-select:none}
+.code .ln.on{background:var(--accent-soft);border-left-color:var(--accent)}
+.code .ln.on.u{background:var(--upd-soft);border-left-color:var(--upd)}
+.code .ln.on.x{background:var(--neg-soft);border-left-color:var(--neg)}
+.code .k{color:var(--accent);font-weight:600} .code .c{color:var(--ink-2);font-style:italic} .code .s{color:var(--ok)}
+
+/* SVG graf */
+.e{fill:none;stroke:var(--ink-2);stroke-width:1.6;opacity:.55}
+.mk-def{fill:var(--ink-2)} .mk-act{fill:var(--accent)} .mk-tree{fill:var(--ok)} .mk-cyc{fill:var(--neg)} .mk-flag{fill:var(--neg)}
+.edge.tree .e{stroke:var(--ok);opacity:1;stroke-width:2.4}
+.edge.act .e{stroke:var(--accent);opacity:1;stroke-width:3.4}
+.edge.cyc .e,.edge.flag .e{stroke:var(--neg);opacity:1;stroke-width:3.4;stroke-dasharray:7 5}
+.chip rect{fill:var(--surface);stroke:var(--line)}
+.chip text{fill:var(--ink);font:600 14px var(--f-mono)}
+.edge.neg .chip rect{fill:var(--neg-soft);stroke:var(--neg)} .edge.neg .chip text{fill:var(--neg)}
+.node circle{fill:var(--surface);stroke:var(--ink);stroke-width:2}
+.node .nm{fill:var(--ink);font:600 14px var(--f-body);text-anchor:middle}
+.node .bd rect{fill:var(--surface-2);stroke:var(--line)}
+.node .bd text{fill:var(--ink);font:700 14px var(--f-mono);text-anchor:middle;dominant-baseline:central}
+.node.src circle{stroke:var(--accent);stroke-width:3.5}
+.node.unk .bd text{fill:var(--ink-2)}
+.node.chg circle{fill:var(--upd-soft);stroke:var(--upd);stroke-width:3.5}
+.node.chg .bd rect{fill:var(--upd-soft);stroke:var(--upd)}
+.node.lock circle{fill:var(--surface-2);stroke-dasharray:4 3}
+.node.cyc circle{stroke:var(--neg);stroke-width:3.5}
+@media (prefers-reduced-motion:no-preference){.node circle,.node .bd rect,.e{transition:fill .25s,stroke .25s,stroke-width .25s}}
+
+.dtab{overflow-x:auto}
+.dtab table{border-collapse:collapse;width:100%;font:400 .84rem/1.4 var(--f-mono)}
+.dtab th,.dtab td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dtab th:first-child,.dtab td:first-child{text-align:left}
+.dtab th{color:var(--ink-2);font-weight:600}
+.dtab td.chg{color:var(--upd);font-weight:700}
+.dtab tr.cur td{background:var(--accent-soft)}
+
+.callout{border-radius:var(--r);padding:12px 14px;border:1px solid var(--line);background:var(--surface)}
+.callout.bad{border-color:var(--neg);background:var(--neg-soft)}
+.callout.ok{border-color:var(--ok);background:var(--ok-soft)}
+
+/* plus minus */
+.pm h3{display:flex;gap:8px;align-items:center}
+.pm ul{margin:10px 0 0;padding-left:1.1em;display:grid;gap:8px}
+.tag{font:700 .72rem/1 var(--f-mono);padding:5px 8px;border-radius:999px;letter-spacing:.04em}
+.tag.plus{background:var(--ok-soft);color:var(--ok)} .tag.min{background:var(--neg-soft);color:var(--neg)}
+.heavy{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.heavy li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.heavy li b{display:block}
+.heavy .fx{font:700 .9rem/1.2 var(--f-mono);color:var(--neg);text-align:right;white-space:nowrap}
+.calc{display:grid;gap:12px}
+.calc .in{display:flex;flex-wrap:wrap;gap:12px}
+.calc label{display:grid;gap:4px;font:600 .82rem/1.2 var(--f-body);color:var(--ink-2)}
+.calc input,.calc select{font:500 1rem/1.2 var(--f-mono);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);width:9.5em}
+.calc .out{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:600px){.calc .out{grid-template-columns:minmax(0,1fr)}}
+.calc .out div{background:var(--surface-2);border-radius:8px;padding:10px 12px}
+.calc .out span{display:block;font:600 .74rem/1.2 var(--f-mono);color:var(--ink-2);text-transform:uppercase;letter-spacing:.05em}
+.calc .out b{font:700 1.25rem/1.3 var(--f-mono);font-variant-numeric:tabular-nums}
+.chart svg{width:100%;height:auto;display:block}
+.chart .ax{stroke:var(--line)} .chart .tk{fill:var(--ink-2);font:400 11px var(--f-mono)}
+.chart .lbl{fill:var(--ink-2);font:600 12px var(--f-body)}
+
+.world{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+@media (max-width:760px){.world{grid-template-columns:minmax(0,1fr)}}
+.world article{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:8px;align-content:start}
+.world .where{font:600 .75rem/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.refs{font-size:.88rem;color:var(--ink-2);display:grid;gap:6px;padding-left:1.4em;margin:0}
+footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.85rem;color:var(--ink-2)}
+
+/* ilustrasi yang bisa dibuka-tutup di kartu dunia nyata */
+.demo{border-top:1px solid var(--line);margin-top:6px;padding-top:10px}
+.demo summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;font:600 .9rem/1 var(--f-body);color:var(--accent);padding:8px 12px;border:1px solid var(--accent);border-radius:999px}
+.demo summary::-webkit-details-marker{display:none}
+.demo summary::before{content:"";width:0;height:0;border-left:6px solid currentColor;border-top:5px solid transparent;border-bottom:5px solid transparent;transition:transform .2s}
+.demo[open] summary::before{transform:rotate(90deg)}
+.demo[open] summary{background:var(--accent-soft)}
+.demo-in{display:grid;gap:10px;margin-top:12px;min-width:0}
+.demo-in .msg{min-height:5em}
+.demo-in .ctrl .btn{padding:8px 10px;font-size:.85rem}
+.demo-in .prog{flex-basis:100%;margin-left:0}
+/* tambahan untuk halaman presentasi */
+nav.toc{display:flex;gap:10px;align-items:center}
+nav.toc ol{flex:1;min-width:0}
+.timer{display:flex;align-items:center;gap:6px;flex:none}
+.timer .btn{padding:6px 9px;font-size:.85rem}
+#tmr{font-size:.95rem;font-weight:700;font-variant-numeric:tabular-nums;min-width:3.4em;text-align:center}
+#tmr.habis{color:var(--neg)}
+.hint-keys{font-size:.82rem;margin:10px 0 0}
+kbd{font:600 .78rem/1 var(--f-mono);padding:2px 6px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;background:var(--surface)}
+.dur{font-weight:400;color:var(--ink-2);margin-left:6px;letter-spacing:.02em;text-transform:none}
+.formal{display:grid;gap:8px;align-content:start}
+.formal .t td{padding:6px 8px;font-size:.92rem}
+.claim{display:grid;gap:10px;align-content:start}
+.claim h3{font-size:1.12rem;line-height:1.3}
+details.proof summary,.faq summary{cursor:pointer;font-weight:600;color:var(--accent)}
+details.proof ol{margin:10px 0 0;padding-left:1.3em;display:grid;gap:8px}
+.cases .big,.design .big{font-size:1.05rem;color:var(--ink);margin-top:6px}
+.cases article,.design article,.temuan article{display:grid;gap:6px;align-content:start}
+.kicker.ok{color:var(--ok)} .kicker.upd{color:var(--upd)} .kicker.neg{color:var(--neg)}
+.grid-stack{display:grid;gap:16px;align-content:start;min-width:0}
+.temuan .num{font:800 1.9rem/1.1 var(--f-display);color:var(--accent)}
+.riset{margin:12px 0 0;padding-left:1.1em;display:grid;gap:8px}
+.takeaway .panel{display:grid;gap:6px}
+.faq{display:grid;gap:8px}
+.faq details{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.faq details p{margin-top:8px}
+@media (max-width:640px){nav.toc{flex-wrap:wrap}.timer{order:-1}}
+/* tambahan halaman ringkas: poin pendek, huruf sedikit lebih besar untuk layar presentasi */
+.pts{margin:0;padding-left:1.15em;display:grid;gap:10px;font-size:1.12rem;max-width:62ch}
+.pts.sm{font-size:1rem;gap:8px}
+.pts li::marker{color:var(--accent)}
+.rumus{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;justify-content:center;text-align:center}
+.rumus b{font-size:clamp(1.3rem,3.4vw,1.9rem);color:var(--accent)}
+.berat article{display:grid;gap:4px;align-content:start}
+.berat .fx{font:700 1.05rem/1.2 var(--f-mono);color:var(--neg)}
+.world article p.one{font-size:1.02rem}
+.design article p:not(.kicker){font-size:1.05rem}
+</style>
+
+<div class="wrap">
+<header class="hero" id="mulai">
+  <div>
+    <p class="kicker">Presentasi · Analisis Algoritma No 7</p>
+    <h1>Bellman-Ford</h1>
+    <p class="lead">Rute termurah ketika sebagian jalan justru memberi untung.</p>
+    <p class="muted" style="margin-top:14px">Muh Fauzi Ramadhan Nugraha · D082261017 · MTI Universitas Hasanuddin</p>
+  </div>
+  <figure style="margin:0">
+    <div class="ledger" aria-label="Buku catatan biaya kasus kurir">
+      <div class="row hd"><span>catatan d</span><span>Gudang</span><span>Toko A</span><span>Toko B</span><span>Pelanggan</span></div>
+      <div class="row"><span>awal</span><span>0</span><span>∞</span><span>∞</span><span>∞</span></div>
+      <div class="row"><span>cek S1</span><span>0</span><span class="chg">4</span><span>∞</span><span>∞</span></div>
+      <div class="row"><span>cek S2</span><span>0</span><span>4</span><span class="chg">5</span><span>∞</span></div>
+      <div class="row"><span>cek S3</span><span>0</span><span class="chg">2</span><span>5</span><span>∞</span></div>
+      <div class="row"><span>cek S4</span><span>0</span><span>2</span><span>5</span><span class="chg">4</span></div>
+    </div>
+    <figcaption class="ledger-cap">Satu putaran pada kasus kurir. Angka kuning adalah catatan yang baru saja diganti. Toko A turun dari 4 ke 2 lewat ruas untung Toko B → Toko A.</figcaption>
+  </figure>
+</header>
+
+<nav class="toc" aria-label="Bagian presentasi">
+  <ol>
+    <li><a href="#masalah">Masalah</a></li>
+    <li><a href="#ide">Ide</a></li>
+    <li><a href="#dijkstra">Vs Dijkstra</a></li>
+    <li><a href="#kasus">Tiga kasus</a></li>
+    <li><a href="#benar">Kenapa benar</a></li>
+    <li><a href="#kerja">Berapa kerjanya</a></li>
+    <li><a href="#eksperimen">Eksperimen</a></li>
+    <li><a href="#nyata">Kasus nyata</a></li>
+    <li><a href="#plusminus">Plus minus</a></li>
+    <li><a href="#dunia">Dunia nyata</a></li>
+    <li><a href="#kesimpulan">Kesimpulan</a></li>
+    <li><a href="#tanya">Tanya jawab</a></li>
+  </ol>
+  <div class="timer" role="group" aria-label="Pengatur waktu presentasi">
+    <button type="button" class="btn" id="tmrBtn" aria-label="Mulai atau jeda pengatur waktu">▶</button>
+    <span id="tmr" class="mono">15:00</span>
+    <button type="button" class="btn" id="tmrReset" aria-label="Ulang pengatur waktu">↺</button>
+  </div>
+</nav>
+<p class="hint-keys muted"><kbd>→</kbd> <kbd>←</kbd> pindah bagian</p>
+
+<!-- 1 -->
+<section id="masalah">
+  <div class="sec-head"><p class="kicker">1 · Masalah <span class="dur">± 1 menit</span></p><h2>Biaya termurah dari satu titik</h2></div>
+  <div class="grid2">
+    <ul class="pts">
+      <li><b>Titik</b> dihubungkan <b>jalan satu arah</b>, tiap jalan punya <b>biaya</b></li>
+      <li>Cari biaya termurah dari titik asal ke <b>semua</b> titik lain, beserta rutenya</li>
+      <li>Biaya boleh <b>negatif</b>: ongkos 50, dibayar 80 → untung 30</li>
+      <li><b>Siklus negatif</b>: putaran yang untung terus → biaya termurah tidak ada, biasanya tanda data salah</li>
+    </ul>
+    <div class="panel formal">
+      <p class="kicker">Formal</p>
+      <p>G = (V, E), bobot w(u, v) ∈ ℝ, asal s. Cari δ(s, v) untuk semua v, atau laporkan siklus negatif yang terjangkau dari s.</p>
+      <p class="mono muted" style="font-size:.88rem">d[v] = catatan biaya · π[v] = datang dari mana</p>
+    </div>
+  </div>
+</section>
+
+<!-- 2 -->
+<section id="ide">
+  <div class="sec-head"><p class="kicker">2 · Ide <span class="dur">± 2 menit</span></p><h2>Periksa semua jalan, ulangi, sampai tidak ada yang berubah</h2></div>
+  <div class="grid2">
+    <ol class="steps">
+      <li><div><b>Catatan awal:</b> asal = 0, lainnya ∞</div></li>
+      <li><div><b>Relaksasi:</b> kalau d[u] + w &lt; d[v], ganti d[v]</div></li>
+      <li><div><b>Ulangi |V| − 1 putaran</b>, atau berhenti kalau tidak ada yang berubah</div></li>
+      <li><div><b>Cek sekali lagi:</b> masih bisa turun → siklus negatif</div></li>
+    </ol>
+  <pre class="pseudo" aria-label="Pseudocode Bellman-Ford"><b>BELLMAN-FORD(G, w, s)</b>
+1  untuk setiap v ∈ V:  d[v] ← ∞;  π[v] ← NIL
+2  d[s] ← 0
+3  ulangi |V| − 1 kali:
+4      untuk setiap sisi (u, v) ∈ E:
+5          jika d[u] &lt; ∞ dan d[u] + w(u, v) &lt; d[v]:
+6              d[v] ← d[u] + w(u, v);  π[v] ← u
+7  untuk setiap sisi (u, v) ∈ E:
+8      jika d[u] &lt; ∞ dan d[u] + w(u, v) &lt; d[v]: kembalikan (d, π, BENAR)
+9  kembalikan (d, π, SALAH)</pre>
+  </div>
+</section>
+
+<!-- 3 -->
+<section id="dijkstra">
+  <div class="sec-head"><p class="kicker">3 · Vs Dijkstra <span class="dur">± 2 menit</span></p><h2>Dijkstra mengunci terlalu cepat</h2></div>
+  <div class="grid2">
+    <div class="tbl"><table class="t">
+      <thead><tr><th></th><th>Bellman-Ford</th><th>Dijkstra</th></tr></thead>
+      <tbody>
+        <tr><td>Biaya negatif</td><td class="ok">✓ benar</td><td class="neg">✗ bisa salah</td></tr>
+        <tr><td>Siklus negatif</td><td class="ok">✓ terdeteksi</td><td class="neg">✗ tidak</td></tr>
+        <tr><td>Cara kerja</td><td>periksa semua, berulang</td><td>ambil termurah, kunci</td></tr>
+        <tr><td>Waktu terburuk</td><td class="mono">|V| · |E|</td><td class="mono">(|V|+|E|) log |V|</td></tr>
+      </tbody></table></div>
+    <ul class="pts">
+      <li>Dijkstra: titik termurah langsung <b>dikunci</b></li>
+      <li>Biaya negatif → jalan memutar bisa lebih murah, tapi titik sudah terkunci</li>
+      <li>Demo: Toko A terkunci di 4, padahal lewat Toko B hanya 2</li>
+    </ul>
+  </div>
+  <div class="lab" id="labDj">
+    <div class="lab-left">
+      <div class="chips" data-role="algo" role="group" aria-label="Pilih algoritma">
+        <button type="button" data-k="dj" aria-pressed="true">Dijkstra</button>
+        <button type="button" data-k="bf" aria-pressed="false">Bellman-Ford</button>
+      </div>
+      <div class="canvas"><svg data-role="svg" viewBox="0 0 640 300" role="img" aria-label="Graf kasus kurir"></svg></div>
+      <div class="ctrl" data-role="ctrl"></div>
+    </div>
+    <div class="lab-right">
+      <div class="msg" data-role="msg"></div>
+      <div data-role="verdict"></div>
+      <div class="dtab" data-role="dtab"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section id="kasus">
+  <div class="sec-head"><p class="kicker">4 · Tiga kasus kecil <span class="dur">± 2 menit</span></p><h2>Langkah demi langkah, dengan kodenya</h2></div>
+  <div class="tabs" id="tabKasus" role="group" aria-label="Pilih kasus">
+    <button type="button" data-k="kurir" aria-pressed="true">1. Rute kurir</button>
+    <button type="button" data-k="uang" aria-pressed="false">2. Segitiga tukar uang</button>
+    <button type="button" data-k="rantai" aria-pressed="false">3. Rantai urutan terburuk</button>
+  </div>
+  <p class="story" id="ceritaKasus"></p>
+  <div class="chips" id="urutanRantai" role="group" aria-label="Urutan daftar sisi" hidden>
+    <button type="button" data-k="terbalik" aria-pressed="true">Daftar terbalik</button>
+    <button type="button" data-k="searah" aria-pressed="false">Daftar searah</button>
+  </div>
+  <div class="lab" id="labKasus">
+    <div class="lab-left">
+      <div class="canvas"><svg data-role="svg" viewBox="0 0 640 300" role="img" aria-label="Graf kasus kecil"></svg></div>
+      <div class="ctrl" data-role="ctrl"></div>
+      <div class="msg" data-role="msg"></div>
+      <div data-role="verdict"></div>
+      <div class="dtab" data-role="dtab"></div>
+    </div>
+    <div class="lab-right">
+      <pre class="code" id="kode" aria-label="Kode Python inti Bellman-Ford"></pre>
+      <p class="muted" style="font-size:.88rem">Biru: baris yang sedang dijalankan. Kuning: catatan diganti. Merah: siklus negatif ditemukan.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section id="benar">
+  <div class="sec-head"><p class="kicker">5 · Kenapa benar <span class="dur">± 2 menit</span></p><h2>Dua janji yang selalu ditepati</h2></div>
+  <div class="grid2">
+    <article class="panel claim">
+      <p class="kicker">Janji 1</p>
+      <h3>Setelah putaran k, titik yang rutenya ≤ k jalan sudah benar</h3>
+      <ul class="pts sm">
+        <li>Catatan tidak pernah di bawah biaya sebenarnya</li>
+        <li>Catatan hanya bisa turun</li>
+        <li>Titik sebelumnya benar → jalan terakhir diperiksa → titik ini benar</li>
+        <li>Rute tanpa putar balik ≤ |V| − 1 jalan → <b>|V| − 1 putaran cukup</b>, urutan apa pun</li>
+      </ul>
+    </article>
+    <article class="panel claim">
+      <p class="kicker">Janji 2</p>
+      <h3>Alarm berbunyi ⇔ ada siklus negatif yang terjangkau</h3>
+      <ul class="pts sm">
+        <li>Tanpa siklus: semua sudah benar → tidak ada yang bisa turun</li>
+        <li>Dengan siklus: jumlahkan sepanjang keliling → 0 ≤ total keliling</li>
+        <li>Padahal total negatif → kontradiksi → <b>pasti ada yang masih turun</b></li>
+        <li>Siklus yang tak terjangkau tidak terlihat (tetap ∞)</li>
+      </ul>
+    </article>
+  </div>
+</section>
+
+<!-- 6 -->
+<section id="kerja">
+  <div class="sec-head"><p class="kicker">6 · Berapa kerjanya <span class="dur">± 2 menit</span></p><h2>Hitung pemeriksaan jalan</h2></div>
+  <div class="panel rumus"><span class="muted">Total kerja</span><b class="mono">|V| + (r + 1) × |E|</b><span class="muted">r = putaran yang dijalankan</span></div>
+  <div class="grid3 cases">
+    <article class="panel"><p class="kicker ok">Paling cepat</p><h3>r = 2</h3><p class="muted">urutan searah rute</p><p class="mono big">Θ(|V| + |E|)</p></article>
+    <article class="panel"><p class="kicker upd">Biasanya</p><h3>r ≈ log |V|</h3><p class="muted">graf acak: 8 → 16 putaran</p><p class="mono big">≈ |E| log |V|</p></article>
+    <article class="panel"><p class="kicker neg">Paling lambat</p><h3>r = |V| − 1</h3><p class="muted">urutan terbalik / siklus negatif</p><p class="mono big">Θ(|V| · |E|)</p></article>
+  </div>
+  <div class="grid2">
+    <ul class="pts">
+      <li><b>Memori:</b> 2 daftar sepanjang |V| → Θ(|V|)</li>
+      <li><b>Daftar jalan:</b> |E| per putaran</li>
+      <li><b>Matriks |V|×|V|:</b> |V|² per putaran → Θ(|V|³)</li>
+      <li>Kasus 3: daftar terbalik <b>12</b> pemeriksaan, searah <b>9</b></li>
+    </ul>
+    <div class="panel calc" id="kalk">
+      <h3>Hitung sendiri</h3>
+      <div class="in">
+        <label for="kV">Titik |V|<input id="kV" type="number" min="2" max="10000000" value="10000"></label>
+        <label for="kR">Jalan per titik<input id="kR" type="number" min="1" max="1000" value="4"></label>
+        <label for="kK">Kasus<select id="kK"><option value="baik">paling cepat</option><option value="acak" selected>biasanya</option><option value="buruk">paling lambat</option></select></label>
+      </div>
+      <div class="out"><div><span>putaran r</span><b id="oR">–</b></div><div><span>pemeriksaan</span><b id="oC">–</b></div><div><span>perkiraan waktu</span><b id="oT">–</b></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 -->
+<section id="eksperimen">
+  <div class="sec-head"><p class="kicker">7 · Eksperimen <span class="dur">± 3 menit</span></p><h2>Cocok dengan teori?</h2></div>
+  <div class="grid3 design">
+    <article class="panel"><p class="kicker">Graf</p><p>rantai searah · acak · rantai terbalik</p><p class="muted">4 jalan per titik</p></article>
+    <article class="panel"><p class="kicker">Ukuran</p><p>400 sampai 300.000 titik</p><p class="muted">6 ukuran, 5 ulangan, rata-rata ± simpangan</p></article>
+    <article class="panel"><p class="kicker">Pembanding</p><p>tanpa henti dini · Dijkstra</p><p class="muted">scipy = kunci jawaban · seed 2026 · M2 Pro, 16 GB · Python 3.14</p></article>
+  </div>
+  <div class="grid2">
+    <figure class="panel chart" style="margin:0">
+      <svg id="grafik" viewBox="0 0 520 330" role="img" aria-label="Grafik waktu eksekusi dan kurva teori"></svg>
+      <figcaption class="muted" style="font-size:.85rem">Penuh = ukur · putus-putus = teori · log-log</figcaption>
+    </figure>
+    <div class="grid-stack">
+      <div class="tbl panel"><table class="t" id="tabMiring">
+        <thead><tr><th>Graf</th><th class="num">Pangkat</th><th class="num">Teori</th></tr></thead><tbody></tbody></table></div>
+      <ul class="pts sm" id="bacaGrafik"></ul>
+    </div>
+  </div>
+  <div class="grid3 temuan" id="temuan"></div>
+</section>
+
+<!-- 8 -->
+<section id="nyata">
+  <div class="sec-head"><p class="kicker">8 · Kasus nyata <span class="dur">± 1 menit</span></p><h2>Distribusi barang Sulawesi Selatan</h2>
+    <p class="story" style="margin-top:6px">8 kota · 10 ruas · biaya bersih = ongkos − pendapatan muatan balik (angka rekaan)</p></div>
+  <div class="chips" id="skenario" role="group" aria-label="Pilih skenario">
+    <button type="button" data-k="normal" aria-pressed="true">Jalankan studi kasus</button>
+    
+    
+  </div>
+  <p class="story" id="ceritaSulsel"></p>
+  <div class="lab" id="labSulsel">
+    <div class="lab-left">
+      <div class="canvas"><svg data-role="svg" viewBox="0 0 720 480" role="img" aria-label="Peta delapan kota"></svg></div>
+      <div class="ctrl" data-role="ctrl"></div>
+    </div>
+    <div class="lab-right">
+      <div class="msg" data-role="msg"></div>
+      <div data-role="verdict"></div>
+      <div class="dtab" data-role="dtab"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 9 -->
+<section id="plusminus">
+  <div class="sec-head"><p class="kicker">9 · Plus minus <span class="dur">± 1 menit</span></p><h2>Teliti, tapi bisa berat</h2></div>
+  <div class="grid2 pm">
+    <div class="panel"><h3><span class="tag plus">PLUS</span></h3><ul>
+      <li>Benar untuk biaya negatif</li>
+      <li>Mendeteksi siklus negatif</li>
+      <li>Sederhana: daftar jalan + 2 larik</li>
+      <li>Bisa terdistribusi (routing)</li>
+    </ul></div>
+    <div class="panel"><h3><span class="tag min">MINUS</span></h3><ul>
+      <li>Terburuk |V| · |E|</li>
+      <li>Ada siklus negatif → tidak ada jawaban, hanya laporan</li>
+      <li>Siklus tak terjangkau tidak terlihat</li>
+    </ul></div>
+  </div>
+  <div class="grid3 berat" id="beratRingkas"></div>
+  <ul id="berat" hidden></ul><span id="rAcak" hidden></span>
+</section>
+
+<!-- 10 -->
+<section id="dunia">
+  <div class="sec-head"><p class="kicker">10 · Dunia nyata <span class="dur">± 1 menit</span></p><h2>Dipakai di mana?</h2></div>
+  <div class="world">
+    <article><p class="where">Jaringan</p><h3>Routing RIP</h3><p class="one">Router bertukar tabel jarak dengan aturan relaksasi · maks 15 lompatan [2]</p>
+      <details class="demo" data-demo="rip"><summary>Lihat berjalan</summary><div class="demo-in"><p class="story" data-role="cerita"></p><div class="canvas"><svg data-role="svg" viewBox="0 0 640 300" role="img" aria-label="Ilustrasi Bellman-Ford"></svg></div><div class="ctrl" data-role="ctrl"></div><div class="msg" data-role="msg"></div><div data-role="verdict"></div><div class="dtab" data-role="dtab"></div></div></details></article>
+    <article><p class="where">Keuangan</p><h3>Deteksi arbitrase</h3><p class="one">Bobot −ln(kurs) · untung berputar = siklus negatif [3]</p>
+      <details class="demo" data-demo="arbitrase"><summary>Lihat berjalan</summary><div class="demo-in"><p class="story" data-role="cerita"></p><div class="canvas"><svg data-role="svg" viewBox="0 0 640 320" role="img" aria-label="Ilustrasi Bellman-Ford"></svg></div><div class="ctrl" data-role="ctrl"></div><div class="msg" data-role="msg"></div><div data-role="verdict"></div><div class="dtab" data-role="dtab"></div></div></details></article>
+    <article><p class="where">Algoritma</p><h3>Johnson</h3><p class="one">Bellman-Ford sekali untuk menggeser bobot → lalu Dijkstra [1]</p>
+      <details class="demo" data-demo="johnson"><summary>Lihat berjalan</summary><div class="demo-in"><p class="story" data-role="cerita"></p><div class="canvas"><svg data-role="svg" viewBox="0 0 640 300" role="img" aria-label="Ilustrasi Bellman-Ford"></svg></div><div class="ctrl" data-role="ctrl"></div><div class="msg" data-role="msg"></div><div data-role="verdict"></div><div class="dtab" data-role="dtab"></div></div></details></article>
+    <article><p class="where">Penjadwalan</p><h3>Batasan selisih</h3><p class="one">"B paling lambat 3 jam sesudah A" → jalan berbobot → jadwal [1]</p>
+      <details class="demo" data-demo="jadwal"><summary>Lihat berjalan</summary><div class="demo-in"><p class="story" data-role="cerita"></p><div class="canvas"><svg data-role="svg" viewBox="0 0 640 300" role="img" aria-label="Ilustrasi Bellman-Ford"></svg></div><div class="ctrl" data-role="ctrl"></div><div class="msg" data-role="msg"></div><div data-role="verdict"></div><div class="dtab" data-role="dtab"></div></div></details></article>
+    <article><p class="where">Logistik</p><h3>Muatan balik</h3><p class="one">Ruas untung = bobot negatif · tarif salah catat ketahuan</p>
+      <details class="demo" data-demo="logistik"><summary>Lihat berjalan</summary><div class="demo-in"><p class="story" data-role="cerita"></p><div class="canvas"><svg data-role="svg" viewBox="0 0 640 280" role="img" aria-label="Ilustrasi Bellman-Ford"></svg></div><div class="ctrl" data-role="ctrl"></div><div class="msg" data-role="msg"></div><div data-role="verdict"></div><div class="dtab" data-role="dtab"></div></div></details></article>
+  </div>
+  <div class="panel">
+    <h3>Riset terbaru</h3>
+    <ul class="pts sm" style="margin-top:8px">
+      <li><b>2022</b> Bernstein dkk. [4]: bobot bulat, hampir linear</li>
+      <li><b>2024</b> Fineman [5]: pertama kali mengalahkan |V|·|E| untuk bobot real</li>
+      <li><b>2025</b> Huang dkk. [6]: lebih cepat lagi, Õ(|E|·|V|<sup>4/5</sup>)</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 11 -->
+<section id="kesimpulan">
+  <div class="sec-head"><p class="kicker">11 · Kesimpulan <span class="dur">± 1 menit</span></p><h2>Bawa pulang</h2></div>
+  <div class="grid2 takeaway">
+    <div class="panel"><p class="kicker ok">1</p><p><b>Benar dengan biaya negatif</b></p><p class="muted">kurir 2/4 vs Dijkstra 4/6 · Sidrap 175 vs 200</p></div>
+    <div class="panel"><p class="kicker neg">2</p><p><b>Siklus negatif tertangkap</b></p><p class="muted">tukar uang −36 · tarif salah catat −10</p></div>
+    <div class="panel"><p class="kicker upd">3</p><p><b>Harganya waktu</b></p><p class="muted">terburuk |V|·|E| · pangkat <span id="kesMiring">2</span> · henti dini ratusan kali lebih cepat</p></div>
+    <div class="panel"><p class="kicker">4</p><p><b>Pilih sesuai data</b></p><p class="muted">semua positif → Dijkstra · ada negatif → Bellman-Ford</p></div>
+  </div>
+</section>
+
+<!-- 12 -->
+<section id="tanya">
+  <div class="sec-head"><p class="kicker">12 · Tanya jawab</p><h2>Cadangan jawaban</h2></div>
+  <div class="faq">
+    <details><summary>Kenapa |V| − 1 putaran?</summary><p>Rute tanpa putar balik paling banyak |V| − 1 jalan; tiap putaran membenarkan satu jalan lagi. Putaran ke-|V| = alarm.</p></details>
+    <details><summary>Kenapa "&lt;" bukan "≤"?</summary><p>Nilai sama bukan perbaikan. Dengan ≤, putaran berbiaya 0 membuat "perubahan" terus terjadi dan henti dini tidak pernah terpicu.</p></details>
+    <details><summary>Urutan jalan mengubah jawaban?</summary><p>Tidak, hanya jumlah putaran. Sulsel: 3, 1, atau 7 putaran, hasil sama.</p></details>
+    <details><summary>Siklus negatif yang tak terjangkau?</summary><p>Tidak terdeteksi (catatan tetap ∞). Untuk seluruh graf: tambah titik bayangan berbiaya 0 ke semua titik.</p></details>
+    <details><summary>Kenapa graf acak tidak lurus?</summary><p>Jumlah pemeriksaan sesuai teori; waktu per pemeriksaan naik <span class="nsA">70</span> → <span class="nsB">350</span> ns. Dugaan: akses memori tersebar.</p></details>
+    <details><summary>scipy lebih cepat, kenapa tulis sendiri?</summary><p>Ketentuan tugas. Lagi pula scipy tidak berhenti dini: di kasus mudah <span class="scipyB">400</span>× lebih lambat.</p></details>
+    <details><summary>Kenapa kurs pakai −ln(kurs)?</summary><p>Kurs dikali, Bellman-Ford menjumlah. Log mengubah kali jadi tambah; minus membuat "untung" jadi "negatif".</p></details>
+  </div>
+  <div class="panel"><h3>Sumber</h3>
+    <ol class="refs">
+      <li>T. H. Cormen dkk., <i>Introduction to Algorithms</i>, ed. ke-4. MIT Press, 2022.</li>
+      <li>C. L. Hedrick, "Routing Information Protocol," RFC 1058, 1988.</li>
+      <li>I. Akouaouch dan A. Bouayad, <i>Bull. Elect. Eng. Informat.</i>, vol. 15, no. 3, 2026.</li>
+      <li>A. Bernstein, D. Nanongkai, dan C. Wulff-Nilsen, <i>Proc. IEEE FOCS</i>, 2022.</li>
+      <li>J. T. Fineman, <i>Proc. ACM STOC</i>, 2024.</li>
+      <li>Y. Huang, P. Jin, dan K. Quanrud, <i>Proc. ACM-SIAM SODA</i>, 2025.</li>
+    </ol>
+  </div>
+  <footer>Angka kasus rekaan · hasil ukur: <code>Bellman_Ford_Eksperimen.ipynb</code> · laporan: <code>Laporan_Bellman_Ford_IEEE.docx</code></footer>
+</section>
+</div>
+
+<script>
+const DATA = {"seri": {"terburuk": [[400, 0.049801258399384096], [800, 0.1684368168011133], [1600, 0.6836162252002396], [3200, 2.5072988834013814], [6400, 10.080691875000047], [12800, 39.955385883200506]], "acak": [[1000, 0.0024746332004724537], [3000, 0.007884208599716658], [10000, 0.03139765020023333], [30000, 0.1467318417991919], [100000, 1.4930231334001292], [300000, 6.028333650000422]], "terbaik": [[1000, 0.0006777749993489123], [3000, 0.0019525250005244742], [10000, 0.006568416600930505], [30000, 0.02024459999956889], [100000, 0.06991647520044353], [300000, 0.2547420417999092]]}, "henti": 352.73411522640004, "ns0": 67.24546740414277, "ns1": 299.0244866071638, "nsAcak": [[1000, 67.24546740414277], [3000, 63.17474839516554], [10000, 64.33944713162568], [30000, 89.90921678872053], [100000, 230.40480453705695], [300000, 299.0244866071638]], "nsRantai": 61.090216077898106, "fit": [1.416821505101466, -1.761010399830281], "rMin": 8.2, "rMax": 15.8, "pres": {"miring": {"terburuk": 1.937844737570993, "terbaik": 1.0340274480696678, "acak": 1.4023820587366242}, "miringOps": 1.11095981355003, "miringScipy": [2.088733957643832, 2.110373863199502, 2.1112272114019066], "teori": {"terburuk": [[400, 0.04187713241279193], [800, 0.16750852965116772], [1600, 0.6700341186046709], [3200, 2.6801364744186835], [6400, 10.720545897674734], [12800, 42.882183590698936]], "terbaik": [[1000, 0.0006984383391584553], [3000, 0.002095315017475366], [10000, 0.006984383391584553], [30000, 0.02095315017475366], [100000, 0.06984383391584553], [300000, 0.2095315017475366]], "acak": [[1000, 0.0023882279283310784], [3000, 0.008099207756948874], [10000, 0.03166997904960778], [30000, 0.10591271682163914], [100000, 0.4205357873800377], [300000, 1.3083335607378952]]}, "henti": [[500, 55.41940000338742], [1000, 107.198132864721], [2000, 192.74680946380488], [3000, 290.244324844334], [4000, 352.73411522640004]], "dijk": [[1000, 3.836826627026439], [3000, 3.894003846908311], [10000, 3.692283372518958], [30000, 4.206999110589146], [100000, 8.03512145669686], [300000, 8.04866795403523]], "scipyBuruk": [[400, 40.74500474730961], [800, 35.2210042222637], [1600, 31.325361123743296], [3200, 28.39783572500374], [6400, 25.670098814829867], [12800, 24.158267678170397]], "scipyBaik": [[1000, 10.39644425778698], [3000, 41.59290322906096], [10000, 150.19685765072072], [30000, 463.0759359038751]], "terburukMaks": 39.955385883200506, "terbaikMaks": 0.2547420417999092}, "teori": {"terburuk": [[400, 0.04187713241279193], [800, 0.16750852965116772], [1600, 0.6700341186046709], [3200, 2.6801364744186835], [6400, 10.720545897674734], [12800, 42.882183590698936]], "terbaik": [[1000, 0.0006984383391584553], [3000, 0.002095315017475366], [10000, 0.006984383391584553], [30000, 0.02095315017475366], [100000, 0.06984383391584553], [300000, 0.2095315017475366]], "acak": [[1000, 0.0023882279283310784], [3000, 0.008099207756948874], [10000, 0.03166997904960778], [30000, 0.10591271682163914], [100000, 0.4205357873800377], [300000, 1.3083335607378952]]}};
+const INF = Infinity;
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const fmt = d => d === INF ? '∞' : (d < 0 ? '−' + (-d) : String(d));
+const NS = 'http://www.w3.org/2000/svg';
+function S(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in (attrs || {})) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+const ICON = {
+  reset: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a5 5 0 1 0 1.6-3.7"/><path d="M3 2.5v3h3"/></svg>',
+  prev: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3 5 8l5 5"/></svg>',
+  next: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 3 5 5-5 5"/></svg>',
+  play: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l9-5.5z"/></svg>',
+  pause: '<svg viewBox="0 0 16 16" fill="currentColor"><rect x="3.5" y="2.5" width="3" height="11" rx="1"/><rect x="9.5" y="2.5" width="3" height="11" rx="1"/></svg>',
+  end: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 3 5 5-5 5"/><path d="M12 3v10"/></svg>'
+};
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- data graf ---------------- */
+const KASUS = {
+  kurir: { src: 0, view: '0 0 640 300', nodes: [['Gudang', 90, 165], ['Toko A', 320, 72], ['Toko B', 320, 238], ['Pelanggan', 550, 72]],
+    edges: [[0, 1, 4, 'S1'], [0, 2, 5, 'S2'], [2, 1, -3, 'S3'], [1, 3, 2, 'S4']],
+    cerita: 'Gudang → Pelanggan · Toko B → Toko A membawa titipan berbayar (−3) · urutan cek S1 sampai S4' },
+  uang: { src: 0, view: '0 0 640 320', nodes: [['USD', 110, 245], ['EUR', 320, 72], ['JPY', 530, 245]],
+    edges: [[0, 1, 105], [1, 2, -5075], [2, 0, 4934]],
+    cerita: '1 USD = 0,9 EUR · 1 EUR = 160 JPY · 1 JPY = 0,0072 USD → keliling 1,0368 · bobot −1000·ln(kurs): 105, −5075, 4934 (total −36)' },
+  rantai: { src: 0, view: '0 0 640 230', nodes: [['A', 80, 120], ['B', 240, 120], ['C', 400, 120], ['D', 560, 120]],
+    urutan: { terbalik: [[2, 3, 1], [1, 2, 3], [0, 1, 2]], searah: [[0, 1, 2], [1, 2, 3], [2, 3, 1]] },
+    cerita: 'A → B → C → D (2, 3, 1) · yang diuji: urutan daftar jalan' }
+};
+const KOTA = [['Makassar', 85, 120], ['Maros', 235, 255], ['Pangkep', 385, 120], ['Barru', 535, 120], ['Parepare', 650, 235], ['Sidrap', 640, 395], ['Pinrang', 500, 335], ['Enrekang', 380, 410]];
+const RUAS = [['R1', 6, 5, 50, 80], ['R2', 2, 3, 60, 80], ['R3', 0, 2, 100, 0], ['R4', 3, 4, 75, 0], ['R5', 5, 6, 45, 0],
+  ['R6', 0, 1, 40, 0], ['R7', 5, 7, 70, 0], ['R8', 4, 6, 60, 0], ['R9', 1, 2, 50, 0], ['R10', 4, 5, 55, 0]];
+const CERITA_SULSEL = {
+  normal: 'Biaya termurah dari Makassar · R1 dan R2 bernilai negatif',
+  audit: 'B · R5 salah catat → siklus Sidrap ↔ Pinrang bernilai −10',
+  putus: 'C · R7 ditutup longsor → Enrekang tak terjangkau'
+};
+function graf(nodes, edges, src, view) {
+  return { src, view, nodes: nodes.map(([label, x, y], id) => ({ id, label, x, y })), edges: edges.map(([u, v, w, kode], id) => ({ id, u, v, w, kode: kode || '' })) };
+}
+function grafSulsel(sk) {
+  const e = [];
+  RUAS.forEach(([kode, u, v, b, p]) => { if (sk === 'putus' && kode === 'R7') return; if (sk === 'audit' && kode === 'R5') p = 25; e.push([u, v, b - p, kode]); });
+  return graf(KOTA, e, 0, '0 0 720 480');
+}
+
+/* ---------------- kode Python yang ditampilkan ---------------- */
+const KODE = [
+  'INF = float("inf")', '',
+  'def relaksasi(u, v, w, dist, pred):',
+  '    if dist[u] != INF and dist[u] + w < dist[v]:',
+  '        dist[v] = dist[u] + w',
+  '        pred[v] = u',
+  '        return True',
+  '    return False', '',
+  'def satu_putaran(edges, dist, pred):',
+  '    ada_perubahan = False',
+  '    for u, v, w in edges:',
+  '        if relaksasi(u, v, w, dist, pred):',
+  '            ada_perubahan = True',
+  '    return ada_perubahan', '',
+  'def ada_siklus_negatif(edges, dist):',
+  '    for u, v, w in edges:',
+  '        if dist[u] != INF and dist[u] + w < dist[v]:',
+  '            return True',
+  '    return False', '',
+  'def bellman_ford(n, edges, src, berhenti_dini=True):',
+  '    dist, pred = [INF] * n, [None] * n      # baris 1',
+  '    dist[src] = 0                           # baris 2',
+  '    for _ in range(n - 1):                  # baris 3',
+  '        ada_perubahan = satu_putaran(edges, dist, pred)',
+  '        if berhenti_dini and not ada_perubahan:',
+  '            break',
+  '    return dist, pred, ada_siklus_negatif(edges, dist)'
+];
+const BARIS = { init: [24, 25], periksa: [26, 27, 12, 13, 4], ganti: [5, 6, 7, 14], tetap: [8], akhirPutaran: [15, 28], henti: [28, 29],
+  uji: [30, 17], ujiSisi: [18, 19], siklus: [19, 20], aman: [21, 30], habis: [26, 30] };
+function warnaiKode(t) {
+  const esc = t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const [isi, kom] = esc.split(/(?=#)/);
+  let h = isi.replace(/\b(def|for|in|if|and|not|return|break)\b/g, '<span class="k">$1</span>').replace(/\b(True|False|None)\b/g, '<span class="k">$1</span>').replace(/("inf")/g, '<span class="s">$1</span>');
+  return h + (kom ? `<span class="c">${kom}</span>` : '');
+}
+
+/* ---------------- pembangkit langkah ---------------- */
+function langkahBF(g, early = true) {
+  const n = g.nodes.length, E = g.edges, s = g.src, nm = i => g.nodes[i].label;
+  const dist = Array(n).fill(INF), pred = Array(n).fill(-1); dist[s] = 0;
+  const F = []; let cek = 0, putaran = 0;
+  const snap = x => F.push(Object.assign({ dist: dist.slice(), pred: pred.slice(), active: -1, changed: -1, cycle: [], cek, putaran, lines: [], kind: '' }, x));
+  snap({ phase: 'init', lines: BARIS.init, msg: `Catatan awal: ${nm(s)} = 0 karena di sinilah titik asalnya. Titik lain ∞, artinya belum diketahui.` });
+  for (let it = 1; it <= n - 1; it++) {
+    putaran = it; let ubah = 0;
+    E.forEach((e, i) => {
+      const { u, v, w } = e; cek++;
+      const kepala = `Putaran ${it}, cek ${e.kode ? e.kode + ' ' : ''}${nm(u)} → ${nm(v)} (bobot ${fmt(w)}). `;
+      if (dist[u] === INF) { snap({ phase: 'relax', active: i, lines: BARIS.periksa.concat(BARIS.tetap), msg: kepala + `Catatan ${nm(u)} masih ∞, jadi sisi ini belum bisa dipakai.` }); return; }
+      const c = dist[u] + w, lama = dist[v];
+      const hit = `${fmt(dist[u])} ${w < 0 ? '−' : '+'} ${Math.abs(w)} = ${fmt(c)}. `;
+      if (c < lama) {
+        dist[v] = c; pred[v] = u; ubah++;
+        snap({ phase: 'relax', active: i, changed: v, kind: 'u', lines: BARIS.periksa.concat(BARIS.ganti), msg: kepala + hit + `Lebih kecil dari catatan ${nm(v)} (${fmt(lama)}), jadi <span class="upd"><b>catatan ${nm(v)} diganti menjadi ${fmt(c)}</b></span> dan asalnya dicatat ${nm(u)}.` });
+      } else snap({ phase: 'relax', active: i, lines: BARIS.periksa.concat(BARIS.tetap), msg: kepala + hit + `Tidak lebih kecil dari catatan ${nm(v)} (${fmt(lama)}), jadi catatan tetap.` });
+    });
+    snap({ phase: 'akhir', round: true, lines: BARIS.akhirPutaran, msg: `Putaran ${it} selesai dengan ${ubah} catatan diganti.` + (ubah ? (it < n - 1 ? ' Semua sisi diperiksa lagi pada putaran berikutnya.' : ` Batas |V| − 1 = ${n - 1} putaran sudah habis.`) : '') });
+    if (early && ubah === 0) {
+      snap({ phase: 'henti', lines: BARIS.henti, msg: `Putaran ${it} tidak mengganti apa pun, jadi putaran berikutnya pasti sama. Perulangan berhenti lebih awal.` });
+      break;
+    }
+  }
+  putaran = 'uji';
+  snap({ phase: 'uji', lines: BARIS.uji, msg: 'Pemeriksaan terakhir: kalau masih ada catatan yang bisa turun, berarti ada siklus negatif.' });
+  for (let i = 0; i < E.length; i++) {
+    const { u, v, w } = E[i]; cek++;
+    if (dist[u] !== INF && dist[u] + w < dist[v]) {
+      const cy = cariSiklus(g, pred, v, u);
+      const teks = cy ? ` Siklusnya: ${cy.nodes.map(nm).concat(nm(cy.nodes[0])).join(' → ')}, total ${fmt(cy.total)} tiap keliling.` : '';
+      snap({ phase: 'siklus', active: i, cycle: cy ? cy.edges : [i], cyc: cy, kind: 'x', lines: BARIS.siklus,
+        msg: `<span class="neg"><b>Siklus negatif ditemukan.</b></span> ${nm(u)} → ${nm(v)} masih menurunkan catatan ${nm(v)}: ${fmt(dist[u])} ${w < 0 ? '−' : '+'} ${Math.abs(w)} = ${fmt(dist[u] + w)} &lt; ${fmt(dist[v])}.${teks}` });
+      return F;
+    }
+    snap({ phase: 'ujiSisi', active: i, lines: BARIS.ujiSisi, msg: `Uji ${nm(u)} → ${nm(v)}: ${dist[u] === INF ? 'asal masih ∞, dilewati' : `${fmt(dist[u] + w)} tidak lebih kecil dari ${fmt(dist[v])}`}.` });
+  }
+  snap({ phase: 'selesai', lines: BARIS.aman, msg: 'Tidak ada catatan yang bisa turun lagi. Tidak ada siklus negatif, dan semua catatan sudah final.' });
+  return F;
+}
+function cariSiklus(g, pred0, v, u) {
+  const pred = pred0.slice(); pred[v] = u; const n = g.nodes.length; let x = v;
+  for (let k = 0; k < n; k++) { if (pred[x] < 0) return null; x = pred[x]; }
+  const urut = [x]; let c = pred[x], jaga = 0;
+  while (c !== x && jaga++ <= n) { if (c < 0) return null; urut.push(c); c = pred[c]; }
+  urut.reverse();
+  const edges = []; let total = 0;
+  for (let k = 0; k < urut.length; k++) {
+    const a = urut[k], b = urut[(k + 1) % urut.length];
+    const e = g.edges.find(z => z.u === a && z.v === b); if (!e) return null; edges.push(e.id); total += e.w;
+  }
+  return { nodes: urut, edges, total };
+}
+function langkahDj(g) {
+  const n = g.nodes.length, E = g.edges, s = g.src, nm = i => g.nodes[i].label;
+  const dist = Array(n).fill(INF), pred = Array(n).fill(-1), lock = Array(n).fill(false); dist[s] = 0;
+  const F = []; let cek = 0;
+  const snap = x => F.push(Object.assign({ dj: true, dist: dist.slice(), pred: pred.slice(), lock: lock.slice(), active: -1, changed: -1, cycle: [], cek, kind: '' }, x));
+  snap({ phase: 'init', msg: `Catatan awal: ${nm(s)} = 0. Dijkstra mengambil titik dengan catatan terkecil yang belum terkunci, menguncinya, lalu memeriksa sisi yang keluar darinya.` });
+  for (;;) {
+    let u = -1;
+    for (let i = 0; i < n; i++) if (!lock[i] && dist[i] !== INF && (u < 0 || dist[i] < dist[u])) u = i;
+    if (u < 0) break;
+    lock[u] = true;
+    snap({ phase: 'kunci', msg: `Ambil ${nm(u)} (catatan ${fmt(dist[u])}), yang terkecil. <b>${nm(u)} dikunci</b>, dan catatannya tidak akan diubah lagi.` });
+    E.forEach((e, i) => {
+      if (e.u !== u) return; cek++;
+      const v = e.v, c = dist[u] + e.w, kepala = `Cek ${nm(u)} → ${nm(v)} (bobot ${fmt(e.w)}): ${fmt(dist[u])} ${e.w < 0 ? '−' : '+'} ${Math.abs(e.w)} = ${fmt(c)}. `;
+      if (lock[v]) {
+        if (c < dist[v]) snap({ phase: 'abai', active: i, flag: true, kind: 'x', msg: kepala + `Lebih murah dari ${fmt(dist[v])}, tetapi ${nm(v)} sudah terkunci. <span class="neg"><b>Dijkstra mengabaikannya</b></span>, padahal biaya ke ${nm(v)} sebenarnya ${fmt(c)}.` });
+        else snap({ phase: 'abai', active: i, msg: kepala + `${nm(v)} sudah terkunci, sisi dilewati.` });
+      } else if (c < dist[v]) { const lama = dist[v]; dist[v] = c; pred[v] = u; snap({ phase: 'relax', active: i, changed: v, kind: 'u', msg: kepala + `Lebih kecil dari ${fmt(lama)}, jadi <span class="upd"><b>catatan ${nm(v)} menjadi ${fmt(c)}</b></span>.` }); }
+      else snap({ phase: 'relax', active: i, msg: kepala + `Tidak lebih kecil dari ${fmt(dist[v])}.` });
+    });
+  }
+  snap({ phase: 'selesai', msg: 'Semua titik terkunci dan Dijkstra berhenti.' });
+  return F;
+}
+
+/* ---------------- penggambar graf ---------------- */
+let UID = 0;
+const R = 24;
+function geom(g, e) {
+  const a = g.nodes[e.u], b = g.nodes[e.v], rev = g.edges.some(o => o.u === e.v && o.v === e.u);
+  const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1, bulge = rev ? 46 : 0;
+  const cx = (a.x + b.x) / 2 + (-dy / len) * bulge, cy = (a.y + b.y) / 2 + (dx / len) * bulge;
+  const na = Math.hypot(cx - a.x, cy - a.y) || 1, nb = Math.hypot(cx - b.x, cy - b.y) || 1;
+  const sx = a.x + (cx - a.x) / na * R, sy = a.y + (cy - a.y) / na * R, ex = b.x + (cx - b.x) / nb * (R + 3), ey = b.y + (cy - b.y) / nb * (R + 3);
+  if (rev) return { d: `M${sx},${sy} Q${cx},${cy} ${ex},${ey}`, pt: t => [(1 - t) ** 2 * sx + 2 * t * (1 - t) * cx + t * t * ex, (1 - t) ** 2 * sy + 2 * t * (1 - t) * cy + t * t * ey] };
+  return { d: `M${sx},${sy} L${ex},${ey}`, pt: t => [sx + (ex - sx) * t, sy + (ey - sy) * t] };
+}
+class Peta {
+  constructor(svg) { this.svg = svg; this.uid = ++UID; }
+  set(g) {
+    this.g = g; const svg = this.svg; svg.textContent = ''; svg.setAttribute('viewBox', g.view);
+    const defs = S('defs', {}, svg);
+    for (const k of ['def', 'act', 'tree', 'cyc', 'flag']) {
+      const m = S('marker', { id: `m-${k}-${this.uid}`, viewBox: '0 0 10 10', refX: 9, refY: 5, markerUnits: 'userSpaceOnUse', markerWidth: k === 'def' ? 11 : 14, markerHeight: k === 'def' ? 11 : 14, orient: 'auto' }, defs);
+      S('path', { d: 'M0,0L10,5L0,10z', class: 'mk-' + k }, m);
+    }
+    const gE = S('g', {}, svg), gN = S('g', {}, svg);
+    const kotak = [];
+    g.nodes.forEach(n => { const w = n.label.length * 8.6 + 12; kotak.push([n.x - R - 2, n.y - R - 2, n.x + R + 2, n.y + R + 2], [n.x - w / 2, n.y - R - 26, n.x + w / 2, n.y - R - 6], [n.x - 30, n.y + R + 4, n.x + 30, n.y + R + 32]); });
+    const ov = (a, b) => Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1]));
+    this.E = g.edges.map(e => {
+      const geo = geom(g, e), grp = S('g', { class: 'edge' }, gE), path = S('path', { class: 'e', d: geo.d }, grp);
+      const label = fmt(e.w), w = Math.max(34, label.length * 9.6 + 16);
+      let best = null;
+      for (const t of [.5, .42, .58, .35, .65, .3, .7]) {
+        const [x, y] = geo.pt(t), r = [x - w / 2, y - 12, x + w / 2, y + 12];
+        let sc = 0; kotak.forEach(b => sc += ov(r, b));
+        if (!best || sc < best.sc) best = { sc, x, y, r }; if (sc === 0) break;
+      }
+      kotak.push(best.r);
+      const chip = S('g', { class: 'chip', transform: `translate(${best.x},${best.y})` }, grp);
+      S('rect', { x: -w / 2, y: -12, width: w, height: 24, rx: 12 }, chip);
+      const t = S('text', { 'text-anchor': 'middle', 'dominant-baseline': 'central' }, chip); t.textContent = label;
+      return { grp, path };
+    });
+    this.N = g.nodes.map((n, i) => {
+      const grp = S('g', { class: 'node', transform: `translate(${n.x},${n.y})` }, gN);
+      S('circle', { r: R }, grp);
+      const nm = S('text', { class: 'nm', y: -R - 10 }, grp); nm.textContent = n.label;
+      const bd = S('g', { class: 'bd', transform: `translate(0,${R + 18})` }, grp);
+      const rect = S('rect', { x: -26, y: -13, width: 52, height: 26, rx: 7 }, bd);
+      const bt = S('text', {}, bd);
+      return { grp, rect, bt };
+    });
+  }
+  paint(f) {
+    const g = this.g, cyc = new Set(f.cycle || []), cn = new Set();
+    cyc.forEach(i => { cn.add(g.edges[i].u); cn.add(g.edges[i].v); });
+    g.edges.forEach((e, i) => {
+      let st = 'def';
+      if (cyc.has(i)) st = 'cyc'; else if (f.flag && f.active === i) st = 'flag'; else if (f.active === i) st = 'act'; else if (f.pred && f.pred[e.v] === e.u) st = 'tree';
+      this.E[i].grp.setAttribute('class', `edge ${st}${e.w < 0 ? ' neg' : ''}`);
+      this.E[i].path.setAttribute('marker-end', `url(#m-${st}-${this.uid})`);
+    });
+    g.nodes.forEach((n, i) => {
+      const el = this.N[i], d = f.dist[i];
+      el.grp.setAttribute('class', 'node' + (i === g.src ? ' src' : '') + (f.changed === i ? ' chg' : '') + (f.lock && f.lock[i] ? ' lock' : '') + (cn.has(i) ? ' cyc' : '') + (d === INF ? ' unk' : ''));
+      const t = fmt(d);
+      if (el.bt.textContent !== t) { el.bt.textContent = t; const w = Math.max(52, t.length * 10 + 18); el.rect.setAttribute('width', w); el.rect.setAttribute('x', -w / 2); }
+    });
+  }
+}
+
+/* ---------------- komponen lab ---------------- */
+const LABEL = { init: 'Mulai', relax: 'Cek sisi', akhir: 'Akhir putaran', henti: 'Berhenti dini', uji: 'Uji siklus', ujiSisi: 'Uji siklus', siklus: 'Siklus negatif', selesai: 'Selesai', kunci: 'Kunci titik', abai: 'Titik terkunci' };
+class Lab {
+  constructor(root, opt = {}) {
+    this.root = root; this.opt = opt; this.peta = new Peta($('[data-role=svg]', root));
+    this.msg = $('[data-role=msg]', root); this.ver = $('[data-role=verdict]', root); this.dtab = $('[data-role=dtab]', root);
+    const c = $('[data-role=ctrl]', root);
+    c.innerHTML = `<button type="button" class="btn primary" data-a="next">${ICON.next}Maju</button><button type="button" class="btn" data-a="prev">${ICON.prev}Mundur</button>`
+      + `<button type="button" class="btn" data-a="play">${ICON.play}<span>Putar</span></button><button type="button" class="btn" data-a="end">${ICON.end}Ke akhir</button>`
+      + `<button type="button" class="btn" data-a="reset">${ICON.reset}Ulang</button><span class="prog"></span>`;
+    this.prog = $('.prog', c); this.btn = a => $(`[data-a=${a}]`, c);
+    c.addEventListener('click', ev => { const b = ev.target.closest('[data-a]'); if (!b) return; const a = b.dataset.a;
+      if (a === 'play') return this.toggle(); this.stop();
+      if (a === 'next') this.go(this.i + 1); else if (a === 'prev') this.go(this.i - 1); else if (a === 'reset') this.go(0); else if (a === 'end') this.go(this.F.length - 1); });
+    this.timer = null;
+  }
+  load(g, F, extra = {}) { this.stop(); this.g = g; this.F = F; this.extra = extra; this.peta.set(g); this.go(0); }
+  go(i) { this.i = Math.max(0, Math.min(this.F.length - 1, i)); this.render(); }
+  toggle() { if (this.timer) return this.stop(); if (this.i >= this.F.length - 1) this.go(0); this.setPlay(true); const tick = () => { if (this.i >= this.F.length - 1) return this.stop(); this.go(this.i + 1); this.timer = setTimeout(tick, reduced ? 1400 : 950); }; this.timer = setTimeout(tick, 600); }
+  stop() { if (this.timer) clearTimeout(this.timer); this.timer = null; this.setPlay(false); }
+  setPlay(on) { const b = this.btn('play'); if (!b) return; b.innerHTML = (on ? ICON.pause : ICON.play) + `<span>${on ? 'Jeda' : 'Putar'}</span>`; }
+  render() {
+    const f = this.F[this.i], g = this.g, last = this.F.length - 1;
+    this.peta.paint(f);
+    const kelas = f.kind === 'x' || f.phase === 'siklus' ? 'bad' : f.kind === 'u' ? 'upd' : (f.phase === 'selesai' || f.phase === 'henti') ? 'done' : '';
+    this.msg.className = 'msg ' + kelas;
+    this.msg.innerHTML = `<span class="ph">${LABEL[f.phase] || ''}</span><p>${f.msg}</p>`;
+    this.prog.textContent = `langkah ${this.i + 1}/${this.F.length} · pemeriksaan sisi: ${f.cek}`;
+    this.btn('prev').disabled = this.i === 0; this.btn('reset').disabled = this.i === 0; this.btn('next').disabled = this.i >= last; this.btn('end').disabled = this.i >= last;
+    this.tabel();
+    this.ver.innerHTML = this.i === last && this.opt.vonis ? this.opt.vonis(f, g, this.extra) : '';
+    if (this.opt.kode) this.opt.kode(f);
+  }
+  tabel() {
+    const g = this.g, nm = g.nodes.map(n => n.label), baris = [];
+    let prev = null;
+    for (let k = 0; k <= this.i; k++) {
+      const f = this.F[k];
+      if (k === 0) baris.push(['Awal', f.dist]);
+      else if (f.dj ? f.phase === 'kunci' : f.phase === 'akhir') baris.push([f.dj ? 'Kunci ' + nm[this.kunciTerakhir(k)] : 'Putaran ' + f.putaran, f.dist]);
+    }
+    const cur = this.F[this.i], selesaiBaris = this.i === 0 || (cur.dj ? cur.phase === 'kunci' : cur.phase === 'akhir');
+    if (!selesaiBaris && !['henti', 'uji', 'ujiSisi', 'siklus', 'selesai'].includes(cur.phase)) baris.push(['sedang berjalan', cur.dist, true]);
+    const head = `<tr><th>${this.F[0].dj ? 'langkah' : 'catatan d'}</th>${nm.map(x => `<th>${x}</th>`).join('')}</tr>`;
+    const rows = baris.map(([lbl, d, now], r) => { const sebelum = r ? baris[r - 1][1] : null;
+      return `<tr class="${now ? 'cur' : ''}"><td>${lbl}</td>${d.map((x, j) => `<td class="${sebelum && sebelum[j] !== x ? 'chg' : ''}">${fmt(x)}</td>`).join('')}</tr>`; }).join('');
+    this.dtab.innerHTML = `<table><thead>${head}</thead><tbody>${rows}</tbody></table>`;
+  }
+  kunciTerakhir(k) { const a = this.F[k - 1].lock || [], b = this.F[k].lock; return b.findIndex((x, i) => x && !a[i]); }
+}
+function rute(g, pred, v) { const out = []; let c = v, j = 0; while (c >= 0 && j++ < 50) { out.push(g.nodes[c].label); c = pred[c]; } return out.reverse().join(' → '); }
+
+/* ---------------- bagian 2: Dijkstra vs Bellman-Ford ---------------- */
+(function () {
+  const root = $('#labDj'), K = KASUS.kurir, g = graf(K.nodes, K.edges, 0, K.view);
+  const lab = new Lab(root, { vonis: (f, g) => {
+    const p = g.nodes.length - 1;
+    if (f.dj) return `<div class="callout bad"><b>Dijkstra: Toko A ${fmt(f.dist[1])}, Pelanggan ${fmt(f.dist[p])}.</b> Salah, karena Toko A terkunci sebelum ruas −3 diperiksa. Biaya yang benar: Toko A 2, Pelanggan 4.</div>`;
+    return `<div class="callout ok"><b>Bellman-Ford: Toko A ${fmt(f.dist[1])}, Pelanggan ${fmt(f.dist[p])}.</b> Rute termurah: ${rute(g, f.pred, p)}.</div>`; } });
+  const muat = k => { $$('[data-role=algo] button', root).forEach(b => b.setAttribute('aria-pressed', b.dataset.k === k)); lab.load(g, k === 'dj' ? langkahDj(g) : langkahBF(g)); };
+  $('[data-role=algo]', root).addEventListener('click', e => { const b = e.target.closest('button'); if (b) muat(b.dataset.k); });
+  muat('dj');
+})();
+
+/* ---------------- bagian 3: tiga kasus + kode ---------------- */
+(function () {
+  const pre = $('#kode');
+  pre.innerHTML = KODE.map((t, i) => `<span class="ln" data-n="${i + 1}"><i>${i + 1}</i>${warnaiKode(t) || ' '}</span>`).join('');
+  const lns = $$('.ln', pre);
+  const sorot = f => { const on = new Set(f.lines || []);
+    lns.forEach((el, i) => { const n = i + 1, aktif = on.has(n); el.classList.toggle('on', aktif);
+      el.classList.toggle('u', aktif && f.kind === 'u' && BARIS.ganti.includes(n)); el.classList.toggle('x', aktif && f.kind === 'x'); }); };
+  const lab = new Lab($('#labKasus'), { kode: sorot, vonis: (f, g, ex) => {
+    if (ex.k === 'kurir') return `<div class="callout ok"><b>Selesai: Toko A 2, Pelanggan 4</b>, sama dengan hitung tangan. Rute: ${rute(g, f.pred, 3)}. Dijalankan 2 putaran (1 berisi perubahan, 1 konfirmasi).</div>`;
+    if (ex.k === 'uang') return `<div class="callout bad"><b>Siklus negatif USD → EUR → JPY → USD (−36).</b> Setiap keliling, 1 USD menjadi 1,0368 USD. Jarak termurah tidak ada, dan inilah tanda peluang arbitrase.</div>`;
+    return `<div class="callout ${ex.u === 'terbalik' ? 'bad' : 'ok'}"><b>Daftar ${ex.u}: ${f.putaranJalan} putaran, ${f.cek} pemeriksaan sisi.</b> Jawabannya sama, d = (0, 2, 5, 6). ${ex.u === 'terbalik' ? 'Seluruh batas |V| − 1 = 3 putaran terpakai.' : 'Bandingkan dengan daftar terbalik: 12 pemeriksaan.'}</div>`; } });
+  let kasus = 'kurir', urutan = 'terbalik';
+  const muat = () => {
+    $$('#tabKasus button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === kasus));
+    $$('#urutanRantai button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === urutan));
+    $('#urutanRantai').hidden = kasus !== 'rantai';
+    const K = KASUS[kasus];
+    $('#ceritaKasus').textContent = K.cerita;
+    const g = graf(K.nodes, kasus === 'rantai' ? K.urutan[urutan] : K.edges, 0, K.view);
+    const F = langkahBF(g);
+    const jalan = Math.max(...F.map(f => typeof f.putaran === 'number' ? f.putaran : 0));
+    F.forEach(f => f.putaranJalan = jalan);
+    lab.load(g, F, { k: kasus, u: urutan });
+  };
+  $('#tabKasus').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { kasus = b.dataset.k; muat(); } });
+  $('#urutanRantai').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { urutan = b.dataset.k; muat(); } });
+  muat();
+})();
+
+/* ---------------- bagian 4: Sulsel ---------------- */
+(function () {
+  const lab = new Lab($('#labSulsel'), { vonis: (f, g, ex) => {
+    if (f.phase === 'siklus') return '<div class="callout bad"><b>Ada data tarif yang janggal.</b> Biaya termurah tidak bisa ditentukan. Periksa tarif pada siklus Sidrap → Pinrang → Sidrap.</div>';
+    const tak = g.nodes.filter((n, i) => f.dist[i] === INF).map(n => n.label);
+    return `<div class="callout ok"><b>Selesai.</b> Sidrap ${fmt(f.dist[5])} lewat ${rute(g, f.pred, 5)}.${tak.length ? ` ${tak.join(', ')} tidak terjangkau.` : ` Enrekang ${fmt(f.dist[7])}.`}${ex.sk === 'normal' ? ' Dijkstra memberi Sidrap 200 dan Enrekang 270, keduanya salah.' : ''}</div>`; } });
+  const muat = sk => { $$('#skenario button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === sk)); $('#ceritaSulsel').textContent = CERITA_SULSEL[sk];
+    const g = grafSulsel(sk); lab.load(g, langkahBF(g), { sk }); };
+  $('#skenario').addEventListener('click', e => { const b = e.target.closest('button'); if (b) muat(b.dataset.k); });
+  muat('normal');
+})();
+
+/* ---------------- bagian 5: berat, kalkulator, grafik ---------------- */
+const angka = (x, nd = 0) => x.toLocaleString('id-ID', { maximumFractionDigits: nd, minimumFractionDigits: nd });
+(function () {
+  const D = DATA;
+  const B = [
+    ['Urutan sisi berlawanan arah jalur', 'Setiap putaran hanya memajukan satu titik, jadi semua |V| − 1 putaran terpakai. Kasus rantai di atas: 12 lawan 9 pemeriksaan; pada graf besar selisihnya |V| lawan belasan putaran.', 'r = |V| − 1'],
+    ['Tanpa penghentian dini', `Versi baku selalu menjalankan |V| − 1 putaran walaupun jawabannya sudah final. Pada graf acak 4.000 titik, versi ini ${angka(D.henti, 0)} kali lebih lambat.`, `×${angka(D.henti, 0)}`],
+    ['Graf padat', 'Waktu sebanding |V|·|E|. Bila hampir setiap pasangan titik terhubung, |E| mendekati |V|² dan waktunya menjadi Θ(|V|³).', 'Θ(|V|³)'],
+    ['Ada siklus negatif', 'Catatan terus turun, sehingga tidak pernah ada putaran tanpa perubahan. Penghentian dini tidak membantu dan semua putaran dijalankan.', 'r = |V| − 1'],
+    ['Graf disimpan sebagai matriks', 'Dengan matriks ketetanggaan, satu putaran harus memeriksa |V|² pasangan meskipun sisinya sedikit. Daftar sisi cukup memeriksa |E|.', 'Θ(|V|²) per putaran'],
+    ['Graf besar di memori', `Pada graf acak besar, waktu per pemeriksaan sisi naik dari ${angka(D.ns0)} ns menjadi ${angka(D.ns1)} ns, diduga karena akses memori yang tersebar. Jumlah operasinya tetap sesuai teori.`, `×${angka(D.ns1 / D.ns0, 1)} per cek`]
+  ];
+  $('#berat').innerHTML = B.map(([j, t, fx]) => `<li><div><b>${j}</b><span class="muted">${t}</span></div><span class="fx">${fx}</span></li>`).join('');
+  $('#rAcak').textContent = `${angka(D.rMin, 1)} sampai ${angka(D.rMax, 1)}`;
+
+  const hitung = () => {
+    const V = Math.max(2, Math.floor(+$('#kV').value || 2)), rasio = Math.max(1, +$('#kR').value || 1), k = $('#kK').value, E = Math.round(V * rasio);
+    let r = k === 'baik' ? 2 : k === 'buruk' ? V - 1 : Math.max(2, Math.round(D.fit[0] * Math.log(V) + D.fit[1]));
+    const cek = (r + 1) * E;
+    const ns = k === 'acak' ? nsAcak(V) : D.nsRantai;
+    const t = cek * ns * 1e-9;
+    $('#oR').textContent = angka(r);
+    $('#oC').textContent = cek >= 1e9 ? angka(cek / 1e9, 1) + ' miliar' : cek >= 1e6 ? angka(cek / 1e6, 1) + ' juta' : angka(cek);
+    $('#oT').textContent = t < 1e-3 ? angka(t * 1e6, 0) + ' µs' : t < 1 ? angka(t * 1e3, 1) + ' ms' : t < 120 ? angka(t, 1) + ' detik' : t < 7200 ? angka(t / 60, 1) + ' menit' : angka(t / 3600, 1) + ' jam';
+  };
+  const nsAcak = V => { let best = D.nsAcak[0]; D.nsAcak.forEach(p => { if (Math.abs(Math.log(p[0] / V)) < Math.abs(Math.log(best[0] / V))) best = p; }); return best[1]; };
+  ['kV', 'kR', 'kK'].forEach(id => $('#' + id).addEventListener('input', hitung));
+  hitung();
+
+  // grafik log-log
+  const svg = $('#grafik'), W = 520, H = 330, L = 58, Rr = 14, T = 16, Bm = 64;
+  const xs = [2.5, 5.7], ys = [-3.6, 2.0];   // log10 rentang sumbu
+  const X = v => L + (Math.log10(v) - xs[0]) / (xs[1] - xs[0]) * (W - L - Rr), Y = v => T + (ys[1] - Math.log10(v)) / (ys[1] - ys[0]) * (H - T - Bm);
+  for (let k = 3; k <= 5; k++) { S('line', { x1: X(10 ** k), x2: X(10 ** k), y1: T, y2: H - Bm, class: 'ax' }, svg); const t = S('text', { x: X(10 ** k), y: H - Bm + 16, 'text-anchor': 'middle', class: 'tk' }, svg); t.textContent = `10${['³', '⁴', '⁵'][k - 3]}`; }
+  for (let k = -3; k <= 2; k++) { S('line', { x1: L, x2: W - Rr, y1: Y(10 ** k), y2: Y(10 ** k), class: 'ax' }, svg); const t = S('text', { x: L - 6, y: Y(10 ** k) + 4, 'text-anchor': 'end', class: 'tk' }, svg); t.textContent = ['1 ms', '10 ms', '0,1 s', '1 s', '10 s', '100 s'][k + 3]; }
+  const lx = S('text', { x: (L + W - Rr) / 2, y: H - Bm + 34, 'text-anchor': 'middle', class: 'lbl' }, svg); lx.textContent = 'jumlah titik |V| (|E| = 4|V|)';
+  const SERI = [['terburuk', '--accent', 'terburuk (rantai terbalik)'], ['acak', '--upd', 'rata-rata (graf acak)'], ['terbaik', '--ok', 'terbaik (rantai searah)']];
+  SERI.forEach(([k, warna, nama], j) => {
+    const pts = D.seri[k];
+    if (D.teori && D.teori[k]) S('polyline', { points: D.teori[k].map(([x, y]) => `${X(x)},${Y(y)}`).join(' '), fill: 'none', style: `stroke:var(${warna});stroke-width:1.5;stroke-dasharray:6 4;opacity:.85` }, svg);
+    S('polyline', { points: pts.map(([x, y]) => `${X(x)},${Y(y)}`).join(' '), fill: 'none', style: `stroke:var(${warna});stroke-width:2.2` }, svg);
+    pts.forEach(([x, y]) => S('circle', { cx: X(x), cy: Y(y), r: 3.6, style: `fill:var(${warna})` }, svg));
+    const ly = H - 16, lxp = L + j * 155;
+    S('line', { x1: lxp, x2: lxp + 18, y1: ly - 4, y2: ly - 4, style: `stroke:var(${warna});stroke-width:3` }, svg);
+    const t = S('text', { x: lxp + 24, y: ly, class: 'tk' }, svg); t.textContent = nama;
+  });
+})();
+
+/* ---------------- bagian 6: ilustrasi di kartu dunia nyata ---------------- */
+const DUNIA = {
+  rip: { view: '0 0 640 300', nodes: [['R1', 90, 150], ['R2', 320, 62], ['R3', 550, 150], ['R4', 320, 238]],
+    edges: [[0, 1, 1], [1, 0, 1], [1, 2, 1], [2, 1, 1], [0, 3, 1], [3, 0, 1], [3, 2, 1], [2, 3, 1]],
+    cerita: '4 router · tiap kabel 1 lompatan, dua arah · tabel dihitung dari R1',
+    vonis: (f, g) => `<div class="callout ok"><b>Tabel routing R1:</b> R2 ${fmt(f.dist[1])} lompatan, R4 ${fmt(f.dist[3])}, R3 ${fmt(f.dist[2])} (lewat ${rute(g, f.pred, 2)}). Pada RIP, jarak 16 dianggap tak terjangkau.</div>` },
+  arbitrase: { view: '0 0 640 320', nodes: [['IDR', 110, 245], ['USD', 320, 72], ['SGD', 530, 245]],
+    edges: [[0, 1, 9680], [1, 2, -300], [2, 0, -9393]],
+    cerita: 'IDR → USD → SGD · hasil kali kurs 1,0125 · bobot 9680, −300, −9393 (total −13)',
+    vonis: () => '<div class="callout bad"><b>Siklus negatif IDR → USD → SGD → IDR (−13).</b> Menukar keliling memberi untung 1,25% tiap putaran. Sistem pendeteksi arbitrase mencari siklus seperti ini.</div>' },
+  johnson: { view: '0 0 640 300', nodes: [['q', 80, 150], ['A', 300, 62], ['B', 300, 238], ['C', 540, 150]],
+    edges: [[0, 1, 0], [0, 2, 0], [0, 3, 0], [1, 2, -2], [2, 3, -1], [1, 3, 4]],
+    cerita: 'q = titik bayangan, jalan 0 ke semua titik · Bellman-Ford dari q memberi geseran h(v)',
+    vonis: f => { const h = f.dist, b = [[1, 2, -2], [2, 3, -1], [1, 3, 4]].map(([u, v, w]) => w + h[u] - h[v]);
+      return `<div class="callout ok"><b>h = (A ${fmt(h[1])}, B ${fmt(h[2])}, C ${fmt(h[3])}).</b> Bobot baru w + h(u) − h(v): A→B ${fmt(b[0])}, B→C ${fmt(b[1])}, A→C ${fmt(b[2])}. Semuanya ≥ 0, jadi Dijkstra kini aman dipakai dari setiap titik.</div>`; } },
+  jadwal: { view: '0 0 640 300', nodes: [['s', 80, 150], ['A', 300, 62], ['B', 300, 238], ['C', 540, 150]],
+    edges: [[0, 1, 0], [0, 2, 0], [0, 3, 0], [1, 2, 3], [2, 1, -1], [2, 3, 2], [3, 1, -4]],
+    cerita: 'A→B 3 · B→A −1 · B→C 2 · C→A −4 · s ke semua 0 · biaya termurah = jam mulai',
+    vonis: f => { const x = f.dist.slice(1), g0 = -Math.min(...x), j = x.map(v => v + g0);
+      return `<div class="callout ok"><b>Jadwal ditemukan:</b> A mulai jam ${j[0]}, B jam ${j[1]}, C jam ${j[2]} (hasil d digeser +${g0}). Keempat batasan terpenuhi. Kalau batasannya saling bertentangan, akan muncul siklus negatif.</div>`; } },
+  logistik: { view: '0 0 640 280', nodes: [['Makassar', 90, 90], ['Maros', 250, 215], ['Pangkep', 400, 90], ['Barru', 560, 90]],
+    edges: [[2, 3, -20, 'R2'], [0, 2, 100, 'R3'], [0, 1, 40, 'R6'], [1, 2, 50, 'R9']],
+    cerita: 'R2 Pangkep → Barru: 60 − 80 = −20 · urutan cek R2, R3, R6, R9',
+    vonis: (f, g) => `<div class="callout ok"><b>Barru ${fmt(f.dist[3])} ribu rupiah per ton</b> lewat ${rute(g, f.pred, 3)}, lebih murah daripada Pangkep (${fmt(f.dist[2])}) karena ruas terakhir memberi untung.</div>` }
+};
+$$('details.demo').forEach(det => {
+  let siap = false;
+  det.addEventListener('toggle', () => {
+    if (!det.open || siap) return;
+    siap = true;
+    const K = DUNIA[det.dataset.demo];
+    $('[data-role=cerita]', det).textContent = K.cerita;
+    const g = graf(K.nodes, K.edges, 0, K.view);
+    new Lab(det, { vonis: (f, gg) => K.vonis(f, gg) }).load(g, langkahBF(g));
+  });
+});
+
+/* ---------------- navigasi aktif ---------------- */
+(function () {
+  const links = $$('nav.toc a'), sec = links.map(a => $(a.getAttribute('href')));
+  if (!('IntersectionObserver' in window)) return;
+  const io = new IntersectionObserver(ent => ent.forEach(e => { if (e.isIntersecting) links.forEach((a, i) => a.classList.toggle('on', sec[i] === e.target)); }), { rootMargin: '-40% 0px -55% 0px' });
+  sec.forEach(s => s && io.observe(s));
+})();
+
+/* ---------------- tambahan halaman presentasi ---------------- */
+(function () {
+  const P = DATA.pres, k2 = (x, n = 2) => x.toLocaleString('id-ID', { minimumFractionDigits: n, maximumFractionDigits: n });
+  const r0 = x => Math.round(x).toLocaleString('id-ID');
+  // tabel kemiringan, versi singkat
+  const baris = [['Paling lambat', P.miring.terburuk, '2'], ['Paling cepat', P.miring.terbaik, '1'], ['Acak', P.miring.acak, '± ' + k2(P.miringOps)]];
+  $('#tabMiring tbody').innerHTML = baris.map(([a, m, t]) => `<tr><td>${a}</td><td class="num mono">${k2(m)}</td><td class="num mono">${t}</td></tr>`).join('');
+  $('#bacaGrafik').innerHTML = `<li>Paling lambat ${k2(P.miring.terburuk)} ≈ 2, paling cepat ${k2(P.miring.terbaik)} ≈ 1 → <b>cocok teori</b></li>`
+    + `<li>Acak lebih curam: waktu per pemeriksaan ${r0(DATA.ns0)} → ${r0(DATA.ns1)} ns (dugaan: memori)</li>`;
+  const hn = P.henti[P.henti.length - 1], dj = P.dijk.map(x => x[1]), sb = P.scipyBuruk.map(x => x[1]), sk = P.scipyBaik[P.scipyBaik.length - 1];
+  const T = [['Henti dini', `${r0(hn[1])}×`, `lebih cepat (acak, ${r0(hn[0])} titik)`],
+             ['Dijkstra', `${k2(Math.min(...dj), 1)}–${k2(Math.max(...dj), 1)}×`, 'lebih cepat bila semua biaya positif']];
+  $('#temuan').innerHTML = T.map(([j, n, t]) => `<article class="panel"><p class="kicker">${j}</p><p class="num">${n}</p><p class="muted">${t}</p></article>`).join('');
+  const B = [['Urutan terbalik', 'r = |V| − 1'], ['Tanpa henti dini', `×${r0(hn[1])}`], ['Graf padat', 'Θ(|V|³)'],
+             ['Ada siklus negatif', 'semua putaran'], ['Matriks |V|×|V|', '|V|² per putaran'], ['Graf besar', `${r0(DATA.ns0)} → ${r0(DATA.ns1)} ns/cek`]];
+  $('#beratRingkas').innerHTML = B.map(([j, fx]) => `<article class="panel"><p class="kicker">Yang bikin berat</p><b>${j}</b><span class="fx">${fx}</span></article>`).join('');
+  $('#kesMiring').textContent = k2(P.miring.terburuk);
+  $$('.nsA').forEach(e => e.textContent = r0(DATA.ns0)); $$('.nsB').forEach(e => e.textContent = r0(DATA.ns1));
+  $$('.scipyB').forEach(e => e.textContent = r0(sk[1]));
+
+  // pengatur waktu 15 menit
+  let sisa = 900, jalan = null;
+  const tampil = () => { const m = Math.floor(Math.abs(sisa) / 60), s = Math.abs(sisa) % 60; $('#tmr').textContent = (sisa < 0 ? '−' : '') + m + ':' + String(s).padStart(2, '0'); $('#tmr').classList.toggle('habis', sisa <= 0); };
+  $('#tmrBtn').addEventListener('click', () => {
+    if (jalan) { clearInterval(jalan); jalan = null; $('#tmrBtn').textContent = '▶'; return; }
+    jalan = setInterval(() => { sisa--; tampil(); }, 1000); $('#tmrBtn').textContent = '❚❚';
+  });
+  $('#tmrReset').addEventListener('click', () => { sisa = 900; tampil(); });
+  tampil();
+
+  // tombol panah untuk pindah bagian
+  const bagian = ['mulai', 'masalah', 'ide', 'dijkstra', 'kasus', 'benar', 'kerja', 'eksperimen', 'nyata', 'plusminus', 'dunia', 'kesimpulan', 'tanya'].map(id => document.getElementById(id));
+  addEventListener('keydown', e => {
+    const t = e.target;
+    if ((t && t.closest && t.closest('input, select, textarea')) || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    const y = scrollY + 90;
+    let i = bagian.findIndex((s, k) => k === bagian.length - 1 || bagian[k + 1].offsetTop > y);
+    i = Math.max(0, Math.min(bagian.length - 1, i + (e.key === 'ArrowRight' ? 1 : -1)));
+    e.preventDefault();
+    bagian[i].scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+  });
+})();
+
+</script>

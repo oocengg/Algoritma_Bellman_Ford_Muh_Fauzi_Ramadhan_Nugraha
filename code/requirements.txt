@@ -1,0 +1,5 @@
+# Dipakai oleh code/Bellman_Ford_Eksperimen.ipynb. Diuji dengan Python 3.14.7.
+numpy>=2.0      # diuji 2.5.3
+matplotlib>=3.8 # diuji 3.11.2
+scipy>=1.11     # diuji 1.18.1, hanya untuk uji silang
+jupyter
