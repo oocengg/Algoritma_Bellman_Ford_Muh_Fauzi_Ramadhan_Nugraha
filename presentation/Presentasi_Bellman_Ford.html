@@ -1,4 +1,4 @@
-<title>Memahami Bellman-Ford</title>
+<title>Bellman-Ford Presentasi Singkat</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=JetBrains+Mono:wght@400;600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
@@ -190,8 +190,6 @@ nav.toc{display:flex;gap:10px;align-items:center}
 nav.toc ol{flex:1;min-width:0}
 .timer{display:flex;align-items:center;gap:6px;flex:none}
 .timer .btn{padding:6px 9px;font-size:.85rem}
-#tmr{font-size:.95rem;font-weight:700;font-variant-numeric:tabular-nums;min-width:3.4em;text-align:center}
-#tmr.habis{color:var(--neg)}
 .hint-keys{font-size:.82rem;margin:10px 0 0}
 kbd{font:600 .78rem/1 var(--f-mono);padding:2px 6px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;background:var(--surface)}
 .dur{font-weight:400;color:var(--ink-2);margin-left:6px;letter-spacing:.02em;text-transform:none}
@@ -212,27 +210,74 @@ details.proof ol{margin:10px 0 0;padding-left:1.3em;display:grid;gap:8px}
 .faq details{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
 .faq details p{margin-top:8px}
 @media (max-width:640px){nav.toc{flex-wrap:wrap}.timer{order:-1}}
+/* tambahan halaman ringkas: poin pendek, huruf sedikit lebih besar untuk layar presentasi */
+.pts{margin:0;padding-left:1.15em;display:grid;gap:10px;font-size:1.12rem;max-width:62ch}
+.pts.sm{font-size:1rem;gap:8px}
+.pts li::marker{color:var(--accent)}
+.rumus{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;justify-content:center;text-align:center}
+.rumus b{font-size:clamp(1.3rem,3.4vw,1.9rem);color:var(--accent)}
+.berat article{display:grid;gap:4px;align-content:start}
+.berat .fx{font:700 1.05rem/1.2 var(--f-mono);color:var(--neg)}
+.world article p.one{font-size:1.02rem}
+.design article p:not(.kicker){font-size:1.05rem}
+.ilmiah{margin-top:20px;max-width:80ch;border-left:3px solid var(--accent);background:var(--surface);padding:12px 16px;border-radius:0 var(--r) var(--r) 0;display:grid;gap:8px}
+.ilmiah p{margin:0;font-size:1rem;line-height:1.62;color:var(--ink)}
+.ilmiah p.kicker{font-size:.72rem}
+.tanpa-ilmiah .ilmiah{display:none}
+#ilmiahBtn{width:auto;padding-inline:10px;font-size:.8rem}
+#ilmiahBtn[aria-pressed="false"]{opacity:.6}
+.hero .apa{display:grid;gap:10px;align-self:start}
+.hero .apa p{margin:0;line-height:1.6}
+.hero .gambaran{grid-column:1/-1;display:grid;gap:10px}
+.gb-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.gb-grid article{display:grid;gap:6px;align-content:start;padding:14px 16px}
+.gb-grid article p:not(.kicker){margin:0;font-size:.98rem;line-height:1.5}
+@media (max-width:860px){.gb-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.gb-grid{grid-template-columns:minmax(0,1fr)}}
+.io{display:grid;gap:6px;min-width:0}
+.py{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);overflow-x:auto;font:400 .8rem/1.6 var(--f-mono);padding:10px 12px;margin:0;white-space:pre;color:var(--ink)}
+.py .c{color:var(--ink-2);font-style:italic}
+.py .k{color:var(--accent);font-weight:600}
+.py .hl{background:var(--upd-soft);border-radius:3px;padding:0 2px}
+.py .bad{background:var(--neg-soft);border-radius:3px;padding:0 2px}
+.py .pr{color:var(--ink-2);user-select:none}
+#pyKeluar.siap{border-color:var(--accent)}
+.t.param td:first-child{font-family:var(--f-mono);white-space:nowrap;font-weight:600}
+.t.param td:last-child{font-family:var(--f-mono);font-size:.8rem}
+.t.param td{vertical-align:top}
+.pmx{display:grid;gap:12px;padding-left:1.1em;margin:0}
+.pmx li{display:grid;gap:2px}
+.pmx li span{font-size:.92rem}
+.t.bigo tr.tot td{font-weight:600;border-top:1px solid var(--line)}
+#bigo .panel{display:grid;gap:10px;align-content:start}
+#bigo .panel p{margin:0}
 </style>
 
 <div class="wrap">
 <header class="hero" id="mulai">
   <div>
     <p class="kicker">Presentasi · Analisis Algoritma No 7</p>
-    <h1>Memahami Bellman-Ford</h1>
-    <p class="lead">Bagaimana komputer mencari rute termurah ketika sebagian jalan justru memberi untung, dan bagaimana ia tahu bahwa "untung terus tanpa batas" adalah tanda ada data yang salah.</p>
-    <p class="muted" style="margin-top:14px">Muh Fauzi Ramadhan Nugraha · D082261017 · Magister Teknik Informatika, Universitas Hasanuddin</p>
+    <h1>Bellman-Ford</h1>
+    <p class="lead">Rute termurah ketika sebagian jalan justru memberi untung.</p>
+    <p class="muted" style="margin-top:14px">Muh Fauzi Ramadhan Nugraha · D082261017 · MTI Universitas Hasanuddin</p>
   </div>
-  <figure style="margin:0">
-    <div class="ledger" aria-label="Buku catatan biaya kasus kurir">
-      <div class="row hd"><span>catatan d</span><span>Gudang</span><span>Toko A</span><span>Toko B</span><span>Pelanggan</span></div>
-      <div class="row"><span>awal</span><span>0</span><span>∞</span><span>∞</span><span>∞</span></div>
-      <div class="row"><span>cek S1</span><span>0</span><span class="chg">4</span><span>∞</span><span>∞</span></div>
-      <div class="row"><span>cek S2</span><span>0</span><span>4</span><span class="chg">5</span><span>∞</span></div>
-      <div class="row"><span>cek S3</span><span>0</span><span class="chg">2</span><span>5</span><span>∞</span></div>
-      <div class="row"><span>cek S4</span><span>0</span><span>2</span><span>5</span><span class="chg">4</span></div>
+  <div class="panel apa">
+    <p class="kicker">Apa itu Bellman-Ford?</p>
+    <p>Bellman-Ford adalah algoritma <b>jarak terpendek satu sumber</b> (<i>single-source shortest paths</i>) pada graf berarah berbobot. Berbeda dari Dijkstra, bobot sisinya <b>boleh negatif</b>.</p>
+    <p>Selain menghitung jarak, algoritma ini memeriksa apakah ada <b>siklus negatif</b> yang dapat dicapai dari sumber, yaitu keadaan ketika jarak terpendek tidak terdefinisi.</p>
+    <p class="muted">Metodenya muncul dalam karya Shimbel (1955), Ford (1956), Bellman (1958), dan Moore (1959), sehingga kadang disebut Bellman-Ford-Moore.</p>
+  </div>
+  <div class="gambaran" aria-label="Gambaran umum Bellman-Ford">
+    <p class="kicker">Gambaran umum</p>
+    <div class="gb-grid">
+      <article class="panel"><p class="kicker">Masukan</p><p>Graf berarah G = (V, E), bobot w(u, v) ∈ ℝ, dan simpul sumber s</p></article>
+      <article class="panel"><p class="kicker">Keluaran</p><p>Jarak δ(s, v) dan pendahulu π[v] untuk setiap simpul, atau laporan siklus negatif</p></article>
+      <article class="panel"><p class="kicker">Cara kerja</p><p>Relaksasi semua sisi, diulang |V| − 1 putaran, lalu satu putaran uji siklus</p></article>
+      <article class="panel"><p class="kicker">Paradigma</p><p>Pemrograman dinamis atas jumlah sisi pada jalur, bukan strategi serakah</p></article>
+      <article class="panel"><p class="kicker">Kompleksitas</p><p>Waktu O(|V|·|E|), memori Θ(|V|). Dengan henti dini, kasus terbaik Θ(|V| + |E|)</p></article>
+      <article class="panel"><p class="kicker">Penerapan</p><p>Routing distance-vector (RIP), deteksi arbitrase, dan algoritma Johnson</p></article>
     </div>
-    <figcaption class="ledger-cap">Satu putaran pada kasus kurir. Angka kuning adalah catatan yang baru saja diganti. Toko A turun dari 4 ke 2 lewat ruas untung Toko B → Toko A.</figcaption>
-  </figure>
+  </div>
 </header>
 
 <nav class="toc" aria-label="Bagian presentasi">
@@ -241,61 +286,49 @@ details.proof ol{margin:10px 0 0;padding-left:1.3em;display:grid;gap:8px}
     <li><a href="#ide">Ide</a></li>
     <li><a href="#dijkstra">Vs Dijkstra</a></li>
     <li><a href="#kasus">Tiga kasus</a></li>
-    <li><a href="#benar">Kenapa benar</a></li>
-    <li><a href="#kerja">Berapa kerjanya</a></li>
-    <li><a href="#eksperimen">Eksperimen</a></li>
     <li><a href="#nyata">Kasus nyata</a></li>
     <li><a href="#plusminus">Plus minus</a></li>
+    <li><a href="#bigo">Big O</a></li>
     <li><a href="#dunia">Dunia nyata</a></li>
     <li><a href="#kesimpulan">Kesimpulan</a></li>
-    <li><a href="#tanya">Tanya jawab</a></li>
+    <li><a href="#sumber">Sumber</a></li>
   </ol>
-  <div class="timer" role="group" aria-label="Pengatur waktu presentasi">
-    <button type="button" class="btn" id="tmrBtn" aria-label="Mulai atau jeda pengatur waktu">▶</button>
-    <span id="tmr" class="mono" aria-live="off">15:00</span>
-    <button type="button" class="btn" id="tmrReset" aria-label="Ulang pengatur waktu">↺</button>
+  <div class="timer" role="group" aria-label="Tampilan">
+    <button type="button" class="btn" id="ilmiahBtn" aria-pressed="true" title="Tampilkan atau sembunyikan kotak penjelasan">Penjelasan</button>
   </div>
 </nav>
-<p class="hint-keys muted">Tekan <kbd>→</kbd> atau <kbd>←</kbd> untuk pindah bagian.</p>
+<p class="hint-keys muted"><kbd>→</kbd> <kbd>←</kbd> pindah bagian</p>
 
 <!-- 1 -->
 <section id="masalah">
-  <div class="sec-head"><p class="kicker">1 · Masalahnya <span class="dur">± 1 menit</span></p><h2>Mencari biaya termurah dari satu titik</h2></div>
+  <div class="sec-head"><p class="kicker">1 · Masalah</p><h2>Biaya termurah dari satu titik</h2></div>
   <div class="grid2">
-    <div class="prose">
-      <p>Bayangkan peta: ada beberapa <b>titik</b> (kota, toko, router), dihubungkan <b>jalan satu arah</b>. Setiap jalan punya <b>biaya</b>. Pertanyaannya sederhana: dari satu titik asal, berapa biaya termurah untuk sampai ke setiap titik lain, dan lewat mana?</p>
-      <p>Bagian yang menarik: biaya boleh <b>negatif</b>. Contohnya truk yang membawa muatan balik berbayar. Ongkosnya 50, tetapi ia dibayar 80, sehingga jalan itu justru untung 30.</p>
-      <p>Kalau ada putaran jalan yang totalnya negatif, kita bisa berputar terus dan "makin untung tanpa batas". Itu disebut <b>siklus negatif</b>. Dalam data nyata, ini hampir selalu tanda ada angka yang salah.</p>
-    </div>
+    <ul class="pts">
+      <li><b>Titik</b> dihubungkan <b>jalan satu arah</b>, tiap jalan punya <b>biaya</b></li>
+      <li>Cari biaya termurah dari titik asal ke <b>semua</b> titik lain, beserta rutenya</li>
+      <li>Biaya boleh <b>negatif</b>: ongkos 50, dibayar 80 → untung 30</li>
+      <li><b>Siklus negatif</b>: putaran yang untung terus → biaya termurah tidak ada, biasanya tanda data salah</li>
+    </ul>
     <div class="panel formal">
-      <p class="kicker">Bahasa formalnya</p>
-      <p>Diberikan graf berarah G = (V, E) dengan bobot w(u, v) yang boleh negatif, dan titik asal s. Untuk setiap titik v, cari biaya termurah δ(s, v) beserta rutenya. Atau laporkan bahwa ada siklus negatif yang bisa dicapai dari s, karena saat itu biaya termurah tidak ada.</p>
-      <table class="t" style="margin-top:12px"><tbody>
-        <tr><td><b>V</b>, |V|</td><td>himpunan titik, banyaknya titik</td></tr>
-        <tr><td><b>E</b>, |E|</td><td>himpunan jalan (sisi), banyaknya jalan</td></tr>
-        <tr><td><b>d[v]</b></td><td>catatan biaya termurah sementara ke v</td></tr>
-        <tr><td><b>π[v]</b></td><td>catatan "v didatangi dari mana", untuk menyusun rute</td></tr>
-      </tbody></table>
+      <p class="kicker">Formal</p>
+      <p>G = (V, E), bobot w(u, v) ∈ ℝ, asal s. Cari δ(s, v) untuk semua v, atau laporkan siklus negatif yang terjangkau dari s.</p>
+      <p class="mono muted" style="font-size:.88rem">d[v] = catatan biaya · π[v] = datang dari mana</p>
     </div>
   </div>
+
+  <div class="ilmiah"><p class="kicker">Penjelasan</p><p>Masukannya adalah graf berarah G = (V, E), fungsi bobot w yang boleh bernilai negatif, dan simpul sumber s. Keluarannya adalah jarak terpendek δ(s, v) untuk setiap simpul v, yaitu bobot minimum di antara semua jalur dari s ke v, beserta jalurnya yang disimpan lewat pendahulu π[v].</p><p>Bila ada siklus berbobot negatif yang dapat dicapai dari s, bobot jalur bisa diturunkan tanpa batas sehingga δ tidak terdefinisi sebagai bilangan (−∞). Dalam keadaan itu algoritma cukup melaporkan keberadaan siklus tersebut.</p></div>
 </section>
 
 <!-- 2 -->
 <section id="ide">
-  <div class="sec-head"><p class="kicker">2 · Idenya <span class="dur">± 2 menit</span></p><h2>Periksa semua jalan, berulang kali, sampai tidak ada yang berubah</h2></div>
+  <div class="sec-head"><p class="kicker">2 · Ide</p><h2>Periksa semua jalan, ulangi, sampai tidak ada yang berubah</h2></div>
   <div class="grid2">
-    <div class="prose">
-      <p>Bellman-Ford bekerja seperti manajer yang memegang buku catatan biaya. Awalnya ia hanya tahu biaya ke titik asal, yaitu 0. Titik lain ditulis ∞, artinya belum tahu.</p>
-      <p>Lalu ia memeriksa jalan satu per satu sambil bertanya: "Kalau lewat jalan ini, apakah lebih murah dari catatanku?" Kalau ya, catatannya diganti. Satu kali memeriksa semua jalan disebut <b>satu putaran</b>. Pemeriksaan satu jalan disebut <b>relaksasi</b>.</p>
-    </div>
     <ol class="steps">
-      <li><div><b>Relaksasi.</b> Untuk sisi u → v berbobot w: kalau <code>d[u] + w &lt; d[v]</code>, ganti catatan v dan ingat bahwa v didatangi dari u.</div></li>
-      <li><div><b>Ulangi |V| − 1 putaran.</b> Jalur termurah yang tidak berputar paling banyak memuat |V| − 1 sisi. Setiap putaran menjamin satu sisi lagi dari jalur itu sudah benar, jadi |V| − 1 putaran selalu cukup.</div></li>
-      <li><div><b>Periksa sekali lagi.</b> Kalau sesudah itu masih ada catatan yang bisa turun, ada <b>siklus negatif</b>: putaran yang selalu untung. Biaya termurah tidak ada, dan algoritma melaporkannya.</div></li>
-      <li><div><b>Boleh berhenti dini.</b> Kalau satu putaran tidak mengubah apa pun, putaran berikutnya pasti sama. Hasilnya tetap benar.</div></li>
+      <li><div><b>Catatan awal:</b> asal = 0, lainnya ∞</div></li>
+      <li><div><b>Relaksasi:</b> kalau d[u] + w &lt; d[v], ganti d[v]</div></li>
+      <li><div><b>Ulangi |V| − 1 putaran</b>, atau berhenti kalau tidak ada yang berubah</div></li>
+      <li><div><b>Cek sekali lagi:</b> masih bisa turun → siklus negatif</div></li>
     </ol>
-  </div>
-  </div>
   <pre class="pseudo" aria-label="Pseudocode Bellman-Ford"><b>BELLMAN-FORD(G, w, s)</b>
 1  untuk setiap v ∈ V:  d[v] ← ∞;  π[v] ← NIL
 2  d[s] ← 0
@@ -306,25 +339,28 @@ details.proof ol{margin:10px 0 0;padding-left:1.3em;display:grid;gap:8px}
 7  untuk setiap sisi (u, v) ∈ E:
 8      jika d[u] &lt; ∞ dan d[u] + w(u, v) &lt; d[v]: kembalikan (d, π, BENAR)
 9  kembalikan (d, π, SALAH)</pre>
+  </div>
+
+  <div class="ilmiah"><p class="kicker">Penjelasan</p><p>Algoritma menyimpan estimasi d[v] yang selalu merupakan batas atas δ(s, v). Relaksasi sisi (u, v) menurunkan batas itu bila jalur lewat u lebih murah, dan mencatat u sebagai pendahulu v.</p><p>Jalur terpendek yang tidak mengulang simpul memuat paling banyak |V| − 1 sisi, sehingga |V| − 1 putaran relaksasi atas semua sisi cukup untuk membuat setiap estimasi tepat. Ini adalah pemrograman dinamis atas jumlah sisi: setelah putaran ke-k, setiap simpul yang jalur terpendeknya berisi paling banyak k sisi sudah benar.</p></div>
 </section>
 
 <!-- 3 -->
 <section id="dijkstra">
-  <div class="sec-head"><p class="kicker">3 · Kenapa tidak Dijkstra saja? <span class="dur">± 2 menit</span></p><h2>Dijkstra terlalu cepat mengunci jawaban</h2></div>
+  <div class="sec-head"><p class="kicker">3 · Vs Dijkstra</p><h2>Dijkstra mengunci terlalu cepat</h2></div>
   <div class="grid2">
     <div class="tbl"><table class="t">
-      <thead><tr><th>Kriteria</th><th>Bellman-Ford</th><th>Dijkstra</th></tr></thead>
+      <thead><tr><th></th><th>Bellman-Ford</th><th>Dijkstra</th></tr></thead>
       <tbody>
-        <tr><td>Bobot negatif</td><td>boleh</td><td>tidak boleh (hasil bisa salah)</td></tr>
-        <tr><td>Siklus negatif</td><td>terdeteksi</td><td>tidak terdeteksi</td></tr>
-        <tr><td>Cara kerja</td><td>periksa semua sisi berulang kali</td><td>ambil titik termurah, kunci, lanjut</td></tr>
-        <tr><td>Waktu terburuk</td><td class="mono">Θ(|V|·|E|)</td><td class="mono">O((|V|+|E|) log |V|)</td></tr>
-        <tr><td>Struktur data</td><td>daftar sisi, dua larik</td><td>antrean prioritas, daftar tetangga</td></tr>
+        <tr><td>Biaya negatif</td><td class="ok">✓ benar</td><td class="neg">✗ bisa salah</td></tr>
+        <tr><td>Siklus negatif</td><td class="ok">✓ terdeteksi</td><td class="neg">✗ tidak</td></tr>
+        <tr><td>Cara kerja</td><td>periksa semua, berulang</td><td>ambil termurah, kunci</td></tr>
+        <tr><td>Waktu terburuk</td><td class="mono">|V| · |E|</td><td class="mono">(|V|+|E|) log |V|</td></tr>
       </tbody></table></div>
-    <div class="prose">
-      <p>Dijkstra selalu mengambil titik dengan catatan termurah lalu <b>menguncinya</b>: catatan itu dianggap final dan tidak akan diubah lagi. Kalau semua biaya positif, ini aman, karena jalan memutar pasti lebih mahal.</p>
-      <p>Dengan biaya negatif, jalan memutar bisa lebih murah, tetapi titiknya sudah terlanjur dikunci. Coba jalankan kasus kurir di bawah dengan kedua algoritma dan bandingkan hasil akhirnya.</p>
-    </div>
+    <ul class="pts">
+      <li>Dijkstra: titik termurah langsung <b>dikunci</b></li>
+      <li>Biaya negatif → jalan memutar bisa lebih murah, tapi titik sudah terkunci</li>
+      <li>Demo: Toko A terkunci di 4, padahal lewat Toko B hanya 2</li>
+    </ul>
   </div>
   <div class="lab" id="labDj">
     <div class="lab-left">
@@ -341,12 +377,13 @@ details.proof ol{margin:10px 0 0;padding-left:1.3em;display:grid;gap:8px}
       <div class="dtab" data-role="dtab"></div>
     </div>
   </div>
+
+  <div class="ilmiah"><p class="kicker">Penjelasan</p><p>Dijkstra bersifat serakah (greedy): simpul dengan estimasi terkecil langsung dianggap final dan tidak diperiksa lagi. Asumsi ini sah hanya bila semua bobot nonnegatif, karena menambah sisi tidak pernah menurunkan biaya jalur.</p><p>Dengan sisi negatif, jalur yang ditemukan belakangan dapat lebih murah daripada nilai yang sudah difinalkan. Bellman-Ford tidak memfinalkan simpul sebelum semua putaran selesai, dengan harga waktu O(|V|·|E|) dibanding O((|V| + |E|) log |V|) untuk Dijkstra.</p></div>
 </section>
 
 <!-- 4 -->
 <section id="kasus">
-  <div class="sec-head"><p class="kicker">4 · Tiga kasus kecil <span class="dur">± 2 menit</span></p><h2>Langkah demi langkah, dengan kodenya di sebelah</h2>
-    <p class="story" style="margin-top:6px">Setiap langkah di kiri menyalakan baris Python yang sedang bekerja di kanan. Kodenya sama dengan notebook <code>Bellman_Ford_Sederhana.ipynb</code> dan tidak memakai pustaka apa pun.</p></div>
+  <div class="sec-head"><p class="kicker">4 · Tiga kasus kecil</p><h2>Langkah demi langkah, dengan kodenya</h2></div>
   <div class="tabs" id="tabKasus" role="group" aria-label="Pilih kasus">
     <button type="button" data-k="kurir" aria-pressed="true">1. Rute kurir</button>
     <button type="button" data-k="uang" aria-pressed="false">2. Segitiga tukar uang</button>
@@ -362,121 +399,34 @@ details.proof ol{margin:10px 0 0;padding-left:1.3em;display:grid;gap:8px}
       <div class="canvas"><svg data-role="svg" viewBox="0 0 640 300" role="img" aria-label="Graf kasus kecil"></svg></div>
       <div class="ctrl" data-role="ctrl"></div>
       <div class="msg" data-role="msg"></div>
+      <div class="io"><p class="kicker">Isi variabel pada langkah ini</p><pre class="py" id="pyVar" aria-live="polite"></pre></div>
       <div data-role="verdict"></div>
       <div class="dtab" data-role="dtab"></div>
+      <div class="io"><p class="kicker">Keluaran program setelah selesai</p><pre class="py" id="pyKeluar"></pre></div>
     </div>
     <div class="lab-right">
+      <div class="io"><p class="kicker">Parameter bellman_ford(n, edges, src, berhenti_dini=True)</p>
+        <div class="tbl"><table class="t param" id="tabParam">
+          <thead><tr><th>Parameter</th><th>Isinya</th><th>Pada kasus ini</th></tr></thead><tbody></tbody></table></div></div>
+      <div class="io"><p class="kicker">Masukan · cara kasus ini dijalankan</p><pre class="py" id="pyMasukan" aria-label="Kode inisialisasi kasus"></pre></div>
       <pre class="code" id="kode" aria-label="Kode Python inti Bellman-Ford"></pre>
       <p class="muted" style="font-size:.88rem">Biru: baris yang sedang dijalankan. Kuning: catatan diganti. Merah: siklus negatif ditemukan.</p>
     </div>
   </div>
+
+  <div class="ilmiah"><p class="kicker">Penjelasan</p><p>Ketiga kasus menguji tiga sifat yang berbeda: kebenaran pada bobot negatif (rute kurir), deteksi siklus negatif (tukar uang, dengan bobot −ln(kurs) sehingga hasil kali kurs > 1 menjadi jumlah bobot < 0), dan pengaruh urutan sisi terhadap jumlah putaran (rantai). Hasil akhir setiap demo sama dengan hitungan tangan dan dengan assert di notebook.</p></div>
 </section>
+
+
+
+
+
+
 
 <!-- 5 -->
-<section id="benar">
-  <div class="sec-head"><p class="kicker">5 · Kenapa hasilnya pasti benar <span class="dur">± 2 menit</span></p><h2>Dua janji, dan alasan keduanya selalu ditepati</h2></div>
-  <div class="prose">
-    <p>Menunjukkan hasil yang benar pada beberapa contoh belum cukup. Kita perlu alasan bahwa hasilnya benar untuk <b>setiap</b> graf. Alasannya bertumpu pada dua janji berikut. Langkah buktinya bisa dibuka satu per satu.</p>
-  </div>
-  <div class="grid2">
-    <article class="panel claim">
-      <p class="kicker">Janji 1</p>
-      <h3>Setelah putaran ke-k, semua titik yang rute termurahnya paling banyak k jalan sudah benar.</h3>
-      <p class="muted">Contoh kurir: rute termurah ke Pelanggan memakai 3 jalan (Gudang → Toko B → Toko A → Pelanggan). Janji ini memastikan Pelanggan benar paling lambat di putaran 3. Karena urutan daftarnya pas, ia sudah benar di putaran 1.</p>
-      <details class="proof"><summary>Lihat langkah buktinya</summary><ol>
-        <li><b>Catatan tidak pernah lebih murah dari kenyataan.</b> Setiap angka di catatan berasal dari rute yang benar-benar ada, jadi tidak mungkin di bawah biaya termurah yang sebenarnya.</li>
-        <li><b>Catatan hanya bisa turun.</b> Catatan hanya diganti kalau ada yang lebih murah, tidak pernah dinaikkan.</li>
-        <li><b>Awal:</b> sebelum putaran apa pun, titik asal sudah benar, yaitu 0.</li>
-        <li><b>Langkah maju:</b> misalkan sesudah putaran k − 1, titik u sudah benar, dan u adalah titik tepat sebelum v pada rute termurah ke v. Di putaran k, jalan u → v pasti diperiksa, karena setiap putaran memeriksa semua jalan. Catatan v turun menjadi biaya u ditambah biaya jalan itu, yaitu biaya termurah ke v. Menurut langkah 1, catatan itu tidak bisa lebih rendah lagi, jadi v sekarang benar dan tetap benar.</li>
-        <li><b>Kesimpulan:</b> rute termurah yang tidak berputar paling banyak melewati |V| − 1 jalan. Jadi |V| − 1 putaran selalu cukup, dengan urutan daftar apa pun.</li>
-        <li><b>Berhenti lebih awal tetap aman:</b> kalau satu putaran tidak mengubah apa pun, putaran berikutnya memeriksa hal yang sama dengan catatan yang sama, jadi hasilnya pasti sama.</li>
-      </ol></details>
-    </article>
-    <article class="panel claim">
-      <p class="kicker">Janji 2</p>
-      <h3>Alarm berbunyi kalau, dan hanya kalau, ada siklus negatif yang bisa dicapai dari titik asal.</h3>
-      <p class="muted">Contoh segitiga tukar uang: keliling USD → EUR → JPY → USD bernilai −36. Sesudah 2 putaran, jalan USD → EUR masih menurunkan catatan EUR (33 &lt; 69), jadi alarm berbunyi.</p>
-      <details class="proof"><summary>Lihat langkah buktinya</summary><ol>
-        <li><b>Tanpa siklus negatif, alarm diam.</b> Menurut Janji 1, sesudah |V| − 1 putaran semua catatan sudah benar. Catatan yang benar tidak bisa diturunkan lagi, jadi pemeriksaan tambahan tidak menemukan apa pun.</li>
-        <li><b>Dengan siklus negatif, alarm pasti berbunyi.</b> Andaikan alarm diam. Artinya, di setiap jalan pada siklus itu, catatan tujuan ≤ catatan asal + biaya jalan.</li>
-        <li>Jumlahkan ketidaksamaan itu sepanjang satu keliling. Setiap titik di siklus muncul sekali di kiri dan sekali di kanan, sehingga semua catatan saling menghapus. Yang tersisa: 0 ≤ total biaya keliling.</li>
-        <li>Padahal total kelilingnya negatif. Hasilnya bertentangan, jadi andaian tadi salah: pasti ada jalan yang masih bisa menurunkan catatan, dan alarm berbunyi.</li>
-        <li><b>Batasannya:</b> siklus yang tidak bisa dicapai dari titik asal tidak akan terlihat, karena catatan di sana tetap ∞. Ini sesuai dengan definisi masalahnya.</li>
-      </ol></details>
-    </article>
-  </div>
-</section>
-
-<!-- 6 -->
-<section id="kerja">
-  <div class="sec-head"><p class="kicker">6 · Berapa banyak kerjanya <span class="dur">± 2 menit</span></p><h2>Yang dihitung: berapa kali sebuah jalan diperiksa</h2></div>
-  <div class="grid2">
-    <div class="prose">
-      <p>Kita tidak menghitung detik, karena detik bergantung pada laptop. Yang dihitung adalah <b>banyaknya pemeriksaan jalan</b>. Pemeriksaan satu jalan selalu sama ringannya: satu penjumlahan dan satu perbandingan.</p>
-      <p>Dari pseudocode, kerjanya bisa dihitung per bagian. Dengan r = banyaknya putaran yang benar-benar dijalankan, totalnya kira-kira <b>(r + 1) × |E|</b>. Jadi semuanya bergantung pada r: dari 2 putaran (paling cepat) sampai |V| − 1 putaran (paling lambat).</p>
-    </div>
-    <div class="tbl panel"><table class="t">
-      <thead><tr><th>Bagian pseudocode</th><th class="num">Banyaknya kerja</th></tr></thead>
-      <tbody>
-        <tr><td>Baris 1–2: isi catatan awal</td><td class="num mono">|V|</td></tr>
-        <tr><td>Baris 4–6: satu putaran memeriksa semua jalan</td><td class="num mono">|E|</td></tr>
-        <tr><td>Baris 3: diulang r kali (paling banyak |V| − 1)</td><td class="num mono">r × |E|</td></tr>
-        <tr><td>Baris 7–8: pemeriksaan siklus</td><td class="num mono">|E|</td></tr>
-        <tr><td><b>Total</b></td><td class="num mono"><b>|V| + (r + 1) × |E|</b></td></tr>
-      </tbody></table></div>
-  </div>
-  <div class="grid3 cases">
-    <article class="panel"><p class="kicker ok">Paling cepat</p><h3>r = 2</h3><p>Urutan daftar searah dengan rute termurah, sehingga satu putaran mengisi semuanya dan satu putaran lagi memastikan. Kerjanya sebanding dengan banyaknya jalan.</p><p class="mono big">Θ(|V| + |E|)</p></article>
-    <article class="panel"><p class="kicker upd">Biasanya</p><h3>r tumbuh pelan</h3><p>Pada graf acak, r hanya naik dari sekitar 8 (1.000 titik) ke 16 (300.000 titik), mengikuti logaritma banyaknya titik.</p><p class="mono big">≈ |E| · log |V|</p></article>
-    <article class="panel"><p class="kicker neg">Paling lambat</p><h3>r = |V| − 1</h3><p>Urutan daftar berlawanan arah dengan rute, atau ada siklus negatif. Setiap putaran hanya memajukan satu titik, dan semua putaran terpakai.</p><p class="mono big">Θ(|V| · |E|)</p></article>
-  </div>
-  <div class="grid2">
-    <div class="prose">
-      <p><b>Memori:</b> cukup dua daftar sepanjang |V|, yaitu catatan biaya dan catatan asal. Kebutuhan ruangnya Θ(|V|).</p>
-      <p><b>Cara menyimpan graf ikut menentukan.</b> Dengan daftar jalan, satu putaran memeriksa |E| jalan. Dengan tabel |V| × |V| (matriks), satu putaran harus memeriksa |V|² kotak walaupun jalannya sedikit, sehingga totalnya menjadi Θ(|V|³).</p>
-      <p>Contoh kecilnya ada di kasus 3: rantai 4 titik butuh 12 pemeriksaan dengan daftar terbalik dan 9 dengan daftar searah.</p>
-    </div>
-    <div class="panel calc" id="kalk">
-      <h3>Coba hitung sendiri</h3>
-      <p class="muted" style="font-size:.92rem">Banyaknya pemeriksaan = (r + 1) × |E|. Perkiraan waktu memakai kecepatan yang terukur di laptop uji (Python 3.14, Apple M2 Pro).</p>
-      <div class="in">
-        <label for="kV">Banyaknya titik |V|<input id="kV" type="number" min="2" max="10000000" value="10000"></label>
-        <label for="kR">Jalan per titik<input id="kR" type="number" min="1" max="1000" value="4"></label>
-        <label for="kK">Kasus<select id="kK"><option value="baik">paling cepat</option><option value="acak" selected>biasanya (acak)</option><option value="buruk">paling lambat</option></select></label>
-      </div>
-      <div class="out"><div><span>putaran r</span><b id="oR">–</b></div><div><span>pemeriksaan</span><b id="oC">–</b></div><div><span>perkiraan waktu</span><b id="oT">–</b></div></div>
-    </div>
-  </div>
-</section>
-
-<!-- 7 -->
-<section id="eksperimen">
-  <div class="sec-head"><p class="kicker">7 · Eksperimen <span class="dur">± 3 menit</span></p><h2>Apakah hitungan di atas cocok dengan kenyataan?</h2></div>
-  <div class="grid3 design">
-    <article class="panel"><p class="kicker">Tiga jenis graf</p><p><b>Rantai searah</b> untuk kasus paling cepat, <b>graf acak</b> untuk kasus biasa, dan <b>rantai terbalik</b> untuk kasus paling lambat. Setiap titik rata-rata punya 4 jalan.</p></article>
-    <article class="panel"><p class="kicker">Ukuran dan pengulangan</p><p>Enam ukuran per jenis: 400 sampai 12.800 titik untuk kasus paling lambat, dan 1.000 sampai 300.000 titik untuk yang lain. Setiap ukuran diulang <b>5 kali</b>, dan yang dilaporkan adalah rata-rata ± simpangan baku.</p></article>
-    <article class="panel"><p class="kicker">Pembanding dan alat</p><p>Pembanding waktu: versi <b>tanpa henti dini</b> dan <b>Dijkstra</b>. <b>scipy</b> hanya dipakai sebagai kunci jawaban pada uji silang 1.000 graf. Setiap hasil dicocokkan, jadi semua pengukuran sekaligus menjadi uji kebenaran. Seed acak tetap 2026; laptop Apple M2 Pro, 16 GB, Python 3.14.</p></article>
-  </div>
-  <div class="grid2">
-    <figure class="panel chart" style="margin:0">
-      <h3>Waktu terhadap banyaknya titik</h3>
-      <svg id="grafik" viewBox="0 0 520 330" role="img" aria-label="Grafik waktu eksekusi dan kurva teori"></svg>
-      <figcaption class="muted" style="font-size:.88rem">Garis penuh: hasil ukur. Garis putus-putus: perkiraan teori. Skala log-log, sehingga garis yang dua kali lebih curam berarti waktunya tumbuh kuadrat.</figcaption>
-    </figure>
-    <div class="grid-stack">
-      <div class="tbl panel"><table class="t" id="tabMiring">
-        <thead><tr><th>Jenis graf</th><th class="num">Pangkat terukur</th><th class="num">Teori</th></tr></thead><tbody></tbody></table>
-        <p class="muted" style="font-size:.88rem;margin-top:8px">Pangkat pertumbuhan k pada waktu ≈ c·|V|<sup>k</sup>. Pangkat 1 berarti waktu naik sebanding banyaknya titik; pangkat 2 berarti naik kuadrat.</p></div>
-      <div class="prose" id="bacaGrafik"></div>
-    </div>
-  </div>
-  <div class="grid3 temuan" id="temuan"></div>
-</section>
-
-<!-- 8 -->
 <section id="nyata">
-  <div class="sec-head"><p class="kicker">8 · Kasus nyata <span class="dur">± 1 menit</span></p><h2>Distribusi barang di Sulawesi Selatan</h2>
-    <p class="story" style="margin-top:6px">Ekspedisi rekaan mengirim barang dari Makassar ke tujuh kota. Biaya bersih tiap ruas adalah biaya operasional dikurangi pendapatan muatan balik, dalam ribu rupiah per ton. Semua angka rekaan, dan nama kota hanya memberi konteks.</p></div>
+  <div class="sec-head"><p class="kicker">5 · Kasus nyata</p><h2>Distribusi barang Sulawesi Selatan</h2>
+    <p class="story" style="margin-top:6px">8 kota · 10 ruas · biaya bersih = ongkos − pendapatan muatan balik (angka rekaan)</p></div>
   <div class="chips" id="skenario" role="group" aria-label="Pilih skenario">
     <button type="button" data-k="normal" aria-pressed="true">Jalankan studi kasus</button>
     
@@ -494,99 +444,148 @@ details.proof ol{margin:10px 0 0;padding-left:1.3em;display:grid;gap:8px}
       <div class="dtab" data-role="dtab"></div>
     </div>
   </div>
+
+  <div class="ilmiah"><p class="kicker">Penjelasan</p><p>Bobot setiap ruas adalah biaya operasional dikurangi pendapatan muatan balik, sehingga dua ruas berbobot negatif. Dijkstra memfinalkan Sidrap pada 200 sebelum ruas Pinrang → Sidrap (−30) diperiksa, sedangkan Bellman-Ford memperoleh 175 setelah tiga putaran yang mengubah nilai dan satu putaran konfirmasi.</p></div>
 </section>
 
-<!-- 9 -->
+<!-- 6 -->
 <section id="plusminus">
-  <div class="sec-head"><p class="kicker">9 · Plus dan minus <span class="dur">± 1 menit</span></p><h2>Teliti dan umum, tetapi bisa berat</h2></div>
+  <div class="sec-head"><p class="kicker">6 · Plus minus</p><h2>Teliti, tapi bisa berat</h2></div>
   <div class="grid2 pm">
-    <div class="panel"><h3><span class="tag plus">PLUS</span> Kelebihan</h3><ul>
-      <li>Benar untuk bobot negatif, yang membuat Dijkstra salah.</li>
-      <li>Mendeteksi siklus negatif yang terjangkau dari asal, sehingga data janggal ketahuan.</li>
-      <li>Sederhana: cukup daftar sisi dan dua larik (<code>d</code> dan <code>π</code>), tanpa antrean prioritas.</li>
-      <li>Dengan henti dini, graf yang jalur termurahnya pendek selesai dalam beberapa putaran saja.</li>
-      <li>Mudah dijalankan secara terdistribusi: tiap titik cukup tahu tetangganya. Inilah dasar routing distance-vector.</li>
+    <div class="panel"><h3><span class="tag plus">PLUS</span></h3><ul class="pmx">
+      <li><b>Tetap benar walau ada biaya negatif</b><span class="muted">Kurir: Toko A = 2. Dijkstra salah memberi 4.</span></li>
+      <li><b>Bisa menemukan siklus negatif</b><span class="muted">Tukar uang: untung 3,68% tiap keliling langsung dilaporkan.</span></li>
+      <li><b>Kodenya sederhana</b><span class="muted">Cukup daftar sisi dan dua larik: dist dan pred.</span></li>
+      <li><b>Berhenti sendiri kalau sudah selesai</b><span class="muted">Rantai searah: cukup 2 putaran, 9 pemeriksaan.</span></li>
     </ul></div>
-    <div class="panel"><h3><span class="tag min">MINUS</span> Kekurangan</h3><ul>
-      <li>Kasus terburuk Θ(|V|·|E|): jauh lebih lambat daripada Dijkstra pada graf besar berbobot positif.</li>
-      <li>Versi tanpa henti dini selalu menjalankan |V| − 1 putaran penuh.</li>
-      <li>Bila ada siklus negatif, jarak tidak bisa ditentukan sama sekali. Algoritma hanya bisa melapor.</li>
-      <li>Siklus negatif yang tidak terjangkau dari asal tidak terlihat.</li>
+    <div class="panel"><h3><span class="tag min">MINUS</span></h3><ul class="pmx">
+      <li><b>Bisa lambat kalau urutan sisinya buruk</b><span class="muted">Rantai terbalik: 3 putaran, 12 pemeriksaan untuk hasil yang sama.</span></li>
+      <li><b>Kalah cepat dari Dijkstra bila semua biaya positif</b><span class="muted">Pada graf besar, Dijkstra 3,7 sampai 8 kali lebih cepat.</span></li>
+      <li><b>Kalau ada siklus negatif, tidak ada rute termurah</b><span class="muted">Tukar uang: program hanya melapor "ada siklus", tanpa jarak.</span></li>
+      <li><b>Siklus yang tidak bisa dicapai dari sumber tidak terlihat</b><span class="muted">Sisi dari simpul yang masih ∞ tidak pernah diperiksa.</span></li>
     </ul></div>
   </div>
-  <h3>Apa yang membuatnya berat</h3>
-  <ul class="heavy" id="berat"></ul>
-  <p class="muted" style="font-size:.9rem">Pada kasus biasa, r berkisar <span id="rAcak">8 sampai 16</span> putaran.</p>
+  <div class="grid3 berat" id="beratRingkas"></div>
+  <ul id="berat" hidden></ul><span id="rAcak" hidden></span>
+
+  <div class="ilmiah"><p class="kicker">Penjelasan</p><p>Kelebihan utamanya adalah keumuman: algoritma benar untuk bobot negatif dan sekaligus memastikan tidak ada siklus negatif yang terjangkau dari sumber. Harganya adalah waktu: pada kasus terburuk semua |V| − 1 putaran dipakai, sehingga jumlah pemeriksaan sebanding dengan |V|·|E|.</p></div>
 </section>
 
-<!-- 10 -->
+<!-- 7 -->
+<section id="bigo">
+  <div class="sec-head"><p class="kicker">7 · Notasi Big O</p><h2>Seberapa cepat kerja bertambah</h2></div>
+  <div class="grid2">
+    <ul class="pts">
+      <li><b>Big O</b> menyatakan bagaimana jumlah langkah tumbuh ketika masukan membesar</li>
+      <li>Yang dilihat hanya suku yang paling cepat tumbuh: konstanta dan suku kecil dibuang, misalnya 3n + 5 → <b>O(n)</b></li>
+      <li><b>O</b> = batas atas (paling lambat) · <b>Ω</b> = batas bawah (paling cepat) · <b>Θ</b> = keduanya sama</li>
+      <li>Bellman-Ford: <b>O(|V|·|E|)</b> pada kasus terburuk, <b>Ω(|V| + |E|)</b> pada kasus terbaik</li>
+    </ul>
+    <div class="panel">
+      <p class="kicker">Turunan dari pseudocode</p>
+      <div class="tbl"><table class="t bigo">
+        <thead><tr><th>Baris</th><th>Yang dikerjakan</th><th class="num">Langkah</th></tr></thead>
+        <tbody>
+          <tr><td>1–2</td><td>beri nilai awal setiap simpul</td><td class="num mono">|V|</td></tr>
+          <tr><td>3–6</td><td>r putaran, tiap putaran cek semua sisi</td><td class="num mono">r × |E|</td></tr>
+          <tr><td>7–8</td><td>satu putaran uji siklus</td><td class="num mono">|E|</td></tr>
+          <tr class="tot"><td colspan="2">Total</td><td class="num mono">|V| + (r + 1)·|E|</td></tr>
+          <tr class="tot"><td colspan="2">Terburuk, r = |V| − 1</td><td class="num mono">|V| + |V|·|E| → O(|V|·|E|)</td></tr>
+        </tbody></table></div>
+    </div>
+  </div>
+
+  <p class="kicker" style="margin-top:22px">Dihitung pada kasus kita</p>
+  <div class="tbl panel" style="margin-top:8px"><table class="t">
+    <thead><tr><th>Kasus</th><th class="num">|V|</th><th class="num">|E|</th><th class="num">Putaran r</th><th class="num">Langkah |V| + (r + 1)·|E|</th><th class="num">Versi baku, r = |V| − 1</th></tr></thead>
+    <tbody>
+      <tr><td>Rute kurir</td><td class="num">4</td><td class="num">4</td><td class="num">2</td><td class="num mono">4 + 3·4 = 16</td><td class="num mono">4 + 4·4 = 20</td></tr>
+      <tr><td>Rantai, daftar searah</td><td class="num">4</td><td class="num">3</td><td class="num">2</td><td class="num mono">4 + 3·3 = 13</td><td class="num mono">4 + 4·3 = 16</td></tr>
+      <tr><td>Rantai, daftar terbalik</td><td class="num">4</td><td class="num">3</td><td class="num">3</td><td class="num mono">4 + 4·3 = 16</td><td class="num mono">4 + 4·3 = 16</td></tr>
+      <tr><td>Studi kasus Sulawesi Selatan</td><td class="num">8</td><td class="num">10</td><td class="num">4</td><td class="num mono">8 + 5·10 = 58</td><td class="num mono">8 + 8·10 = 88</td></tr>
+    </tbody></table></div>
+  <p class="muted" style="font-size:.9rem;margin-top:6px">Angka pemeriksaan sisi (r + 1)·|E| sama dengan yang muncul di demo: kurir 12, rantai 9 dan 12, studi kasus 50.</p>
+
+  <div class="grid2" style="margin-top:20px">
+    <div class="panel">
+      <p class="kicker">Penggunaan 1 · memperkirakan waktu</p>
+      <p>Pada rantai terbalik, |E| = 4|V|, jadi O(|V|·|E|) = O(|V|²). Graf 2× lebih besar → waktu sekitar <b>4×</b>.</p>
+      <div class="tbl"><table class="t">
+        <thead><tr><th class="num">|V|</th><th class="num">Waktu terukur</th><th class="num">× dari baris atas</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1.600</td><td class="num mono">0,68 s</td><td class="num">–</td></tr>
+          <tr><td class="num">3.200</td><td class="num mono">2,51 s</td><td class="num">3,7×</td></tr>
+          <tr><td class="num">6.400</td><td class="num mono">10,1 s</td><td class="num">4,0×</td></tr>
+          <tr><td class="num">12.800</td><td class="num mono">40,0 s</td><td class="num">4,0×</td></tr>
+        </tbody></table></div>
+      <p class="muted" style="font-size:.9rem">Perkiraan untuk 25.600 simpul: 40 s × 4 ≈ 160 s, tanpa perlu menjalankannya.</p>
+    </div>
+    <div class="panel">
+      <p class="kicker">Penggunaan 2 · memilih algoritma</p>
+      <ul class="pts sm">
+        <li>Bellman-Ford: <b>O(|V|·|E|)</b></li>
+        <li>Dijkstra: <b>O((|V| + |E|) log |V|)</b>, jauh lebih kecil pada graf besar</li>
+        <li>Graf acak 300.000 simpul, semua biaya positif: Bellman-Ford 6,2 s, Dijkstra 0,78 s</li>
+        <li>Tapi studi kasus kita punya biaya negatif → Dijkstra salah, jadi tetap <b>Bellman-Ford</b></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="ilmiah"><p class="kicker">Penjelasan</p><p>Secara formal, f(n) = O(g(n)) bila ada konstanta c &gt; 0 dan n₀ sehingga f(n) ≤ c·g(n) untuk semua n ≥ n₀. Artinya, mulai dari ukuran tertentu, f tidak tumbuh lebih cepat daripada kelipatan tetap dari g. Ω menyatakan batas bawah dengan ketaksamaan yang dibalik, dan Θ berlaku bila keduanya terpenuhi.</p><p>Untuk Bellman-Ford, banyaknya langkah adalah T = |V| + (r + 1)·|E| dengan r ≤ |V| − 1, sehingga T ≤ |V| + |V|·|E| ≤ 2·|V|·|E| untuk |E| ≥ 1. Dengan c = 2 diperoleh T = O(|V|·|E|). Batas ini ketat karena rantai terbalik benar-benar memakai r = |V| − 1, sehingga kasus terburuknya Θ(|V|·|E|).</p></div>
+</section>
+
+
+<!-- 7 -->
 <section id="dunia">
-  <div class="sec-head"><p class="kicker">10 · Di dunia nyata <span class="dur">± 1 menit</span></p><h2>Di mana Bellman-Ford dipakai</h2></div>
+  <div class="sec-head"><p class="kicker">8 · Dunia nyata</p><h2>Dipakai di mana?</h2></div>
   <div class="world">
-    <article><p class="where">Jaringan komputer</p><h3>Routing distance-vector (RIP)</h3>
-      <p>Setiap router hanya tahu jarak ke tetangganya, lalu saling bertukar tabel jarak dan memperbaruinya dengan aturan relaksasi yang sama. Inilah Bellman-Ford yang dijalankan terdistribusi. RIP membatasi jarak sampai 15 lompatan [2].</p>
-      <details class="demo" data-demo="rip"><summary>Lihat Bellman-Ford berjalan</summary><div class="demo-in"><p class="story" data-role="cerita"></p><div class="canvas"><svg data-role="svg" viewBox="0 0 640 300" role="img" aria-label="Ilustrasi Bellman-Ford"></svg></div><div class="ctrl" data-role="ctrl"></div><div class="msg" data-role="msg"></div><div data-role="verdict"></div><div class="dtab" data-role="dtab"></div></div></details></article>
-    <article><p class="where">Keuangan</p><h3>Mencari peluang arbitrase</h3>
-      <p>Kurs dijadikan bobot −ln(kurs), sehingga putaran tukar uang yang menguntungkan menjadi siklus negatif, seperti kasus segitiga di atas. Akouaouch dan Bouayad memakai Bellman-Ford untuk mendeteksi arbitrase segitiga di pasar kripto [3].</p>
-      <details class="demo" data-demo="arbitrase"><summary>Lihat Bellman-Ford berjalan</summary><div class="demo-in"><p class="story" data-role="cerita"></p><div class="canvas"><svg data-role="svg" viewBox="0 0 640 320" role="img" aria-label="Ilustrasi Bellman-Ford"></svg></div><div class="ctrl" data-role="ctrl"></div><div class="msg" data-role="msg"></div><div data-role="verdict"></div><div class="dtab" data-role="dtab"></div></div></details></article>
-    <article><p class="where">Algoritma lain</p><h3>Langkah awal algoritma Johnson</h3>
-      <p>Untuk jarak antar semua pasangan titik pada graf berbobot negatif, Johnson menjalankan Bellman-Ford sekali untuk menggeser bobot menjadi nonnegatif, lalu memakai Dijkstra dari tiap titik [1].</p>
-      <details class="demo" data-demo="johnson"><summary>Lihat Bellman-Ford berjalan</summary><div class="demo-in"><p class="story" data-role="cerita"></p><div class="canvas"><svg data-role="svg" viewBox="0 0 640 300" role="img" aria-label="Ilustrasi Bellman-Ford"></svg></div><div class="ctrl" data-role="ctrl"></div><div class="msg" data-role="msg"></div><div data-role="verdict"></div><div class="dtab" data-role="dtab"></div></div></details></article>
-    <article><p class="where">Penjadwalan</p><h3>Sistem batasan selisih</h3>
-      <p>Batasan seperti "tugas B mulai paling lambat 3 jam sesudah tugas A" dapat diubah menjadi graf. Bellman-Ford menemukan jadwal yang memenuhi semua batasan, atau melaporkan bahwa batasannya saling bertentangan bila ada siklus negatif [1].</p>
-      <details class="demo" data-demo="jadwal"><summary>Lihat Bellman-Ford berjalan</summary><div class="demo-in"><p class="story" data-role="cerita"></p><div class="canvas"><svg data-role="svg" viewBox="0 0 640 300" role="img" aria-label="Ilustrasi Bellman-Ford"></svg></div><div class="ctrl" data-role="ctrl"></div><div class="msg" data-role="msg"></div><div data-role="verdict"></div><div class="dtab" data-role="dtab"></div></div></details></article>
-    <article><p class="where">Logistik (kasus di halaman ini)</p><h3>Biaya bersih dengan muatan balik</h3>
-      <p>Bila pendapatan muatan balik melebihi biaya ruas, bobotnya negatif. Bellman-Ford memberi rute termurah dan sekaligus menangkap tarif yang salah catat, karena kesalahan seperti itu bisa membentuk siklus negatif.</p>
-      <details class="demo" data-demo="logistik"><summary>Lihat Bellman-Ford berjalan</summary><div class="demo-in"><p class="story" data-role="cerita"></p><div class="canvas"><svg data-role="svg" viewBox="0 0 640 280" role="img" aria-label="Ilustrasi Bellman-Ford"></svg></div><div class="ctrl" data-role="ctrl"></div><div class="msg" data-role="msg"></div><div data-role="verdict"></div><div class="dtab" data-role="dtab"></div></div></details></article>
+    <article><p class="where">Jaringan</p><h3>Routing RIP</h3><p class="one">Router bertukar tabel jarak dengan aturan relaksasi · maks 15 lompatan [2]</p>
+      <details class="demo" data-demo="rip"><summary>Lihat berjalan</summary><div class="demo-in"><p class="story" data-role="cerita"></p><div class="canvas"><svg data-role="svg" viewBox="0 0 640 300" role="img" aria-label="Ilustrasi Bellman-Ford"></svg></div><div class="ctrl" data-role="ctrl"></div><div class="msg" data-role="msg"></div><div data-role="verdict"></div><div class="dtab" data-role="dtab"></div></div></details></article>
+    <article><p class="where">Keuangan</p><h3>Deteksi arbitrase</h3><p class="one">Bobot −ln(kurs) · untung berputar = siklus negatif [3]</p>
+      <details class="demo" data-demo="arbitrase"><summary>Lihat berjalan</summary><div class="demo-in"><p class="story" data-role="cerita"></p><div class="canvas"><svg data-role="svg" viewBox="0 0 640 320" role="img" aria-label="Ilustrasi Bellman-Ford"></svg></div><div class="ctrl" data-role="ctrl"></div><div class="msg" data-role="msg"></div><div data-role="verdict"></div><div class="dtab" data-role="dtab"></div></div></details></article>
+    <article><p class="where">Algoritma</p><h3>Johnson</h3><p class="one">Bellman-Ford sekali untuk menggeser bobot → lalu Dijkstra [1]</p>
+      <details class="demo" data-demo="johnson"><summary>Lihat berjalan</summary><div class="demo-in"><p class="story" data-role="cerita"></p><div class="canvas"><svg data-role="svg" viewBox="0 0 640 300" role="img" aria-label="Ilustrasi Bellman-Ford"></svg></div><div class="ctrl" data-role="ctrl"></div><div class="msg" data-role="msg"></div><div data-role="verdict"></div><div class="dtab" data-role="dtab"></div></div></details></article>
+    <article><p class="where">Penjadwalan</p><h3>Batasan selisih</h3><p class="one">"B paling lambat 3 jam sesudah A" → jalan berbobot → jadwal [1]</p>
+      <details class="demo" data-demo="jadwal"><summary>Lihat berjalan</summary><div class="demo-in"><p class="story" data-role="cerita"></p><div class="canvas"><svg data-role="svg" viewBox="0 0 640 300" role="img" aria-label="Ilustrasi Bellman-Ford"></svg></div><div class="ctrl" data-role="ctrl"></div><div class="msg" data-role="msg"></div><div data-role="verdict"></div><div class="dtab" data-role="dtab"></div></div></details></article>
+    <article><p class="where">Logistik</p><h3>Muatan balik</h3><p class="one">Ruas untung = bobot negatif · tarif salah catat ketahuan</p>
+      <details class="demo" data-demo="logistik"><summary>Lihat berjalan</summary><div class="demo-in"><p class="story" data-role="cerita"></p><div class="canvas"><svg data-role="svg" viewBox="0 0 640 280" role="img" aria-label="Ilustrasi Bellman-Ford"></svg></div><div class="ctrl" data-role="ctrl"></div><div class="msg" data-role="msg"></div><div data-role="verdict"></div><div class="dtab" data-role="dtab"></div></div></details></article>
   </div>
   <div class="panel">
-    <h3>Riset terbaru: bisakah lebih cepat?</h3>
-    <p class="muted" style="margin-top:6px">Selama puluhan tahun, |V| · |E| dianggap batas untuk bobot negatif. Beberapa tahun terakhir batas itu mulai ditembus.</p>
-    <ul class="riset">
-      <li><b>2022 · Bernstein, Nanongkai, Wulff-Nilsen [4]:</b> untuk bobot bilangan bulat, waktunya hampir sebanding banyaknya jalan. Salah satu makalah terbaik FOCS 2022.</li>
-      <li><b>2024 · Fineman [5]:</b> perbaikan pertama untuk bobot pecahan (real) sejak algoritma klasik: Õ(|E| · |V|<sup>8/9</sup>).</li>
-      <li><b>2025 · Huang, Jin, Quanrud [6]:</b> mempercepat hasil Fineman menjadi Õ(|E| · |V|<sup>4/5</sup>).</li>
-      <li><b>2012 · Bannister dan Eppstein [7]:</b> mengacak urutan pemeriksaan mengurangi kerja kasus terburuk sekitar sepertiga dibanding varian Yen.</li>
+    <h3>Riset terbaru</h3>
+    <ul class="pts sm" style="margin-top:8px">
+      <li><b>2022</b> Bernstein dkk. [4]: bobot bulat, hampir linear</li>
+      <li><b>2024</b> Fineman [5]: pertama kali mengalahkan |V|·|E| untuk bobot real</li>
+      <li><b>2025</b> Huang dkk. [6]: lebih cepat lagi, Õ(|E|·|V|<sup>4/5</sup>)</li>
     </ul>
   </div>
+
+  <div class="ilmiah"><p class="kicker">Penjelasan</p><p>Pada setiap contoh ini, bobot atau siklus negatif punya makna yang nyata: siklus negatif pada graf kurs berarti peluang arbitrase, sistem batasan selisih yang tidak konsisten muncul sebagai siklus negatif, dan algoritma Johnson memakai jarak hasil Bellman-Ford sebagai potensial untuk membuat semua bobot nonnegatif.</p></div>
 </section>
 
-<!-- 11 -->
+<!-- 8 -->
 <section id="kesimpulan">
-  <div class="sec-head"><p class="kicker">11 · Kesimpulan <span class="dur">± 1 menit</span></p><h2>Yang perlu dibawa pulang</h2></div>
+  <div class="sec-head"><p class="kicker">9 · Kesimpulan</p><h2>Bawa pulang</h2></div>
   <div class="grid2 takeaway">
-    <div class="panel"><p class="kicker ok">1</p><p><b>Benar ketika ada biaya negatif.</b> Kurir: Toko A 2 dan Pelanggan 4, sedangkan Dijkstra memberi 4 dan 6. Sulsel: Sidrap 175 dan Enrekang 245, sedangkan Dijkstra memberi 200 dan 270.</p></div>
-    <div class="panel"><p class="kicker neg">2</p><p><b>Siklus negatif selalu tertangkap.</b> Segitiga tukar uang (−36) dan tarif salah catat (−10) sama-sama dilaporkan sebagai "tidak ada biaya termurah", bukan angka palsu.</p></div>
-    <div class="panel"><p class="kicker upd">3</p><p><b>Harganya adalah waktu.</b> Paling lambat |V| · |E| pemeriksaan. Eksperimen mengonfirmasi bentuknya: pangkat <span id="kesMiring">2</span> untuk kasus terlambat dan sekitar 1 untuk kasus tercepat. Berhenti lebih awal membuatnya ratusan kali lebih cepat pada graf acak.</p></div>
-    <div class="panel"><p class="kicker">4</p><p><b>Pilih sesuai data.</b> Semua biaya positif: pakai Dijkstra. Ada biaya negatif, atau data perlu diperiksa dari siklus negatif: pakai Bellman-Ford.</p></div>
+    <div class="panel"><p class="kicker ok">1</p><p><b>Benar dengan biaya negatif</b></p><p class="muted">kurir 2/4 vs Dijkstra 4/6 · Sidrap 175 vs 200</p></div>
+    <div class="panel"><p class="kicker neg">2</p><p><b>Siklus negatif tertangkap</b></p><p class="muted">tukar uang −36 · terdeteksi oleh uji baris 7–8</p></div>
+    <div class="panel"><p class="kicker upd">3</p><p><b>Harganya waktu</b></p><p class="muted">terburuk |V|·|E| · pangkat <span id="kesMiring">2</span> · henti dini ratusan kali lebih cepat</p></div>
+    <div class="panel"><p class="kicker">4</p><p><b>Pilih sesuai data</b></p><p class="muted">semua positif → Dijkstra · ada negatif → Bellman-Ford</p></div>
   </div>
 </section>
 
-<!-- 12 -->
-<section id="tanya">
-  <div class="sec-head"><p class="kicker">12 · Tanya jawab</p><h2>Pertanyaan yang mungkin muncul</h2></div>
-  <div class="faq">
-    <details><summary>Kenapa tepat |V| − 1 putaran, bukan |V|?</summary><p>Rute termurah yang tidak berputar mengunjungi setiap titik paling banyak sekali, jadi paling banyak melewati |V| − 1 jalan. Menurut Janji 1, setiap putaran menjamin satu jalan lagi dari rute itu sudah benar. Putaran ke-|V| tidak diperlukan untuk menghitung, tetapi dipakai sebagai alarm siklus negatif.</p></details>
-    <details><summary>Kenapa memakai "lebih kecil dari", bukan "lebih kecil atau sama dengan"?</summary><p>Nilai yang sama bukan perbaikan. Kalau "sama dengan" ikut dihitung, catatan asal (π) bisa berganti tanpa alasan. Pada graf dengan putaran berbiaya 0, perubahan semacam itu bisa terus terjadi, sehingga berhenti lebih awal tidak pernah terpicu.</p></details>
-    <details><summary>Apakah urutan daftar jalan mengubah jawaban?</summary><p>Tidak. Urutan hanya mengubah berapa putaran yang dibutuhkan. Pada peta Sulsel, urutan asli butuh 3 putaran berisi perubahan, urutan dari Makassar ke luar 1 putaran, dan urutan terbalik 7 putaran. Jawabannya sama persis.</p></details>
-    <details><summary>Bagaimana kalau siklus negatifnya tidak bisa dicapai dari titik asal?</summary><p>Siklus itu tidak terdeteksi, karena catatan di sana tetap ∞ dan jalannya tidak pernah dipakai. Ini memang di luar pertanyaan "biaya dari titik asal". Untuk mencari siklus di mana saja, tambahkan titik bayangan yang terhubung ke semua titik dengan biaya 0, seperti pada algoritma Johnson.</p></details>
-    <details><summary>Kenapa grafik graf acak tidak lurus seperti teori?</summary><p>Banyaknya pemeriksaan tetap sesuai teori. Yang naik adalah waktu per pemeriksaan: dari sekitar <span class="nsA">70</span> menjadi <span class="nsB">350</span> nanodetik pada graf besar. Dugaan kami, penyebabnya akses memori yang tersebar karena urutan jalannya acak. Pada rantai, yang datanya berurutan, kenaikan ini tidak terjadi. Dugaan ini belum diuji dengan alat profil memori.</p></details>
-    <details><summary>Kalau scipy jauh lebih cepat, kenapa menulis sendiri?</summary><p>Ketentuan tugas meminta inti algoritma ditulis sendiri, dan scipy hanya dipakai sebagai kunci jawaban. Menariknya, scipy tidak berhenti lebih awal, sehingga pada graf yang mudah ia justru jauh lebih lambat daripada versi kita (sampai <span class="scipyB">400</span> kali pada 30.000 titik).</p></details>
-    <details><summary>Bagaimana kode tahu sebuah titik tidak terjangkau?</summary><p>Catatannya tetap ∞ sampai akhir, dan jalan dari titik yang catatannya ∞ tidak pernah dipakai, karena ada syarat <code>dist[u] != INF</code>. Pada uji silang, 715 dari 895 graf acak tanpa siklus negatif punya titik seperti ini, dan hasilnya selalu sama dengan scipy.</p></details>
-    <details><summary>Kenapa biaya kurs memakai −ln(kurs)?</summary><p>Kurs dikalikan, sedangkan Bellman-Ford menjumlahkan. Logaritma mengubah perkalian menjadi penjumlahan, dan tanda minus membuat "hasil kali lebih dari 1" menjadi "jumlah kurang dari 0". Jadi peluang untung muncul sebagai siklus negatif.</p></details>
-  </div>
+<!-- sumber -->
+<section id="sumber">
   <div class="panel"><h3>Sumber</h3>
     <ol class="refs">
-      <li>T. H. Cormen, C. E. Leiserson, R. L. Rivest, dan C. Stein, <i>Introduction to Algorithms</i>, ed. ke-4. MIT Press, 2022.</li>
-      <li>C. L. Hedrick, "Routing Information Protocol," IETF, RFC 1058, Jun. 1988.</li>
-      <li>I. Akouaouch dan A. Bouayad, "An innovative approach to identifying triangular arbitrage opportunities in financial markets using the Bellman-Ford algorithm," <i>Bull. Elect. Eng. Informat.</i>, vol. 15, no. 3, hlm. 2579–2594, Jun. 2026.</li>
-      <li>A. Bernstein, D. Nanongkai, dan C. Wulff-Nilsen, "Negative-weight single-source shortest paths in near-linear time," <i>Proc. IEEE FOCS</i>, 2022, hlm. 600–611.</li>
-      <li>J. T. Fineman, "Single-source shortest paths with negative real weights in Õ(mn<sup>8/9</sup>) time," <i>Proc. ACM STOC</i>, 2024, hlm. 3–14.</li>
-      <li>Y. Huang, P. Jin, dan K. Quanrud, "Faster single-source shortest paths with negative real weights via proper hop distance," <i>Proc. ACM-SIAM SODA</i>, 2025, hlm. 5239–5244.</li>
-      <li>M. J. Bannister dan D. Eppstein, "Randomized speedup of the Bellman–Ford algorithm," <i>Proc. ANALCO</i>, 2012, hlm. 41–47.</li>
+      <li>T. H. Cormen dkk., <i>Introduction to Algorithms</i>, ed. ke-4. MIT Press, 2022.</li>
+      <li>C. L. Hedrick, "Routing Information Protocol," RFC 1058, 1988.</li>
+      <li>I. Akouaouch dan A. Bouayad, <i>Bull. Elect. Eng. Informat.</i>, vol. 15, no. 3, 2026.</li>
+      <li>A. Bernstein, D. Nanongkai, dan C. Wulff-Nilsen, <i>Proc. IEEE FOCS</i>, 2022.</li>
+      <li>J. T. Fineman, <i>Proc. ACM STOC</i>, 2024.</li>
+      <li>Y. Huang, P. Jin, dan K. Quanrud, <i>Proc. ACM-SIAM SODA</i>, 2025.</li>
     </ol>
   </div>
-  <footer>Kasus kurir, segitiga tukar uang, dan peta Sulsel memakai angka rekaan. Hasil ukur berasal dari notebook <code>Bellman_Ford_Eksperimen.ipynb</code>. Laporan lengkap: <code>Laporan_Bellman_Ford_IEEE.docx</code>.</footer>
+  <footer>Angka kasus rekaan · hasil ukur: <code>Bellman_Ford_Eksperimen.ipynb</code> · laporan: <code>Laporan_Bellman_Ford_IEEE.pdf</code></footer>
 </section>
 </div>
 
@@ -611,21 +610,21 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const KASUS = {
   kurir: { src: 0, view: '0 0 640 300', nodes: [['Gudang', 90, 165], ['Toko A', 320, 72], ['Toko B', 320, 238], ['Pelanggan', 550, 72]],
     edges: [[0, 1, 4, 'S1'], [0, 2, 5, 'S2'], [2, 1, -3, 'S3'], [1, 3, 2, 'S4']],
-    cerita: 'Kurir berangkat dari Gudang menuju Pelanggan. Ruas Toko B → Toko A membawa titipan berbayar, jadi biaya bersihnya −3. Sisi diperiksa menurut urutan S1 sampai S4.' },
+    cerita: 'Gudang → Pelanggan · Toko B → Toko A membawa titipan berbayar (−3) · urutan cek S1 sampai S4' },
   uang: { src: 0, view: '0 0 640 320', nodes: [['USD', 110, 245], ['EUR', 320, 72], ['JPY', 530, 245]],
     edges: [[0, 1, 105], [1, 2, -5075], [2, 0, 4934]],
-    cerita: 'Kurs rekaan: 1 USD = 0,9 EUR, 1 EUR = 160 JPY, 1 JPY = 0,0072 USD. Keliling sekali, 1 USD menjadi 1,0368 USD. Bobot ditulis sebagai −1000·ln(kurs): 105, −5075, dan 4934, yang jumlahnya −36. Perkalian kurs lebih dari 1 berarti jumlah bobot kurang dari 0.' },
+    cerita: '1 USD = 0,9 EUR · 1 EUR = 160 JPY · 1 JPY = 0,0072 USD → keliling 1,0368 · bobot −1000·ln(kurs): 105, −5075, 4934 (total −36)' },
   rantai: { src: 0, view: '0 0 640 230', nodes: [['A', 80, 120], ['B', 240, 120], ['C', 400, 120], ['D', 560, 120]],
     urutan: { terbalik: [[2, 3, 1], [1, 2, 3], [0, 1, 2]], searah: [[0, 1, 2], [1, 2, 3], [2, 3, 1]] },
-    cerita: 'Rute lurus A → B → C → D dengan biaya 2, 3, 1. Jawabannya jelas (0, 2, 5, 6). Yang diuji adalah urutan daftar sisi: daftar terbalik memaksa satu putaran per titik, daftar searah selesai dalam satu putaran.' }
+    cerita: 'A → B → C → D (2, 3, 1) · yang diuji: urutan daftar jalan' }
 };
 const KOTA = [['Makassar', 85, 120], ['Maros', 235, 255], ['Pangkep', 385, 120], ['Barru', 535, 120], ['Parepare', 650, 235], ['Sidrap', 640, 395], ['Pinrang', 500, 335], ['Enrekang', 380, 410]];
 const RUAS = [['R1', 6, 5, 50, 80], ['R2', 2, 3, 60, 80], ['R3', 0, 2, 100, 0], ['R4', 3, 4, 75, 0], ['R5', 5, 6, 45, 0],
   ['R6', 0, 1, 40, 0], ['R7', 5, 7, 70, 0], ['R8', 4, 6, 60, 0], ['R9', 1, 2, 50, 0], ['R10', 4, 5, 55, 0]];
 const CERITA_SULSEL = {
-  normal: 'Biaya bersih termurah dari Makassar ke semua kota. Ruas R1 (Pinrang → Sidrap) dan R2 (Pangkep → Barru) bernilai negatif.',
-  audit: 'Skenario B: pendapatan R5 (Sidrap → Pinrang) salah dicatat 25, sehingga Sidrap → Pinrang → Sidrap bernilai 20 − 30 = −10. Sistem harus menangkap kesalahan ini.',
-  putus: 'Skenario C: R7 (Sidrap → Enrekang) ditutup karena longsor. Enrekang tidak bisa dicapai.'
+  normal: 'Biaya termurah dari Makassar · R1 dan R2 bernilai negatif',
+  audit: 'B · R5 salah catat → siklus Sidrap ↔ Pinrang bernilai −10',
+  putus: 'C · R7 ditutup longsor → Enrekang tak terjangkau'
 };
 function graf(nodes, edges, src, view) {
   return { src, view, nodes: nodes.map(([label, x, y], id) => ({ id, label, x, y })), edges: edges.map(([u, v, w, kode], id) => ({ id, u, v, w, kode: kode || '' })) };
@@ -678,11 +677,11 @@ function warnaiKode(t) {
 function langkahBF(g, early = true) {
   const n = g.nodes.length, E = g.edges, s = g.src, nm = i => g.nodes[i].label;
   const dist = Array(n).fill(INF), pred = Array(n).fill(-1); dist[s] = 0;
-  const F = []; let cek = 0, putaran = 0;
-  const snap = x => F.push(Object.assign({ dist: dist.slice(), pred: pred.slice(), active: -1, changed: -1, cycle: [], cek, putaran, lines: [], kind: '' }, x));
+  const F = []; let cek = 0, putaran = 0, ubah = 0;
+  const snap = x => F.push(Object.assign({ dist: dist.slice(), pred: pred.slice(), active: -1, changed: -1, cycle: [], cek, putaran, ubah, lines: [], kind: '' }, x));
   snap({ phase: 'init', lines: BARIS.init, msg: `Catatan awal: ${nm(s)} = 0 karena di sinilah titik asalnya. Titik lain ∞, artinya belum diketahui.` });
   for (let it = 1; it <= n - 1; it++) {
-    putaran = it; let ubah = 0;
+    putaran = it; ubah = 0;
     E.forEach((e, i) => {
       const { u, v, w } = e; cek++;
       const kepala = `Putaran ${it}, cek ${e.kode ? e.kode + ' ' : ''}${nm(u)} → ${nm(v)} (bobot ${fmt(w)}). `;
@@ -895,11 +894,90 @@ function rute(g, pred, v) { const out = []; let c = v, j = 0; while (c >= 0 && j
   const sorot = f => { const on = new Set(f.lines || []);
     lns.forEach((el, i) => { const n = i + 1, aktif = on.has(n); el.classList.toggle('on', aktif);
       el.classList.toggle('u', aktif && f.kind === 'u' && BARIS.ganti.includes(n)); el.classList.toggle('x', aktif && f.kind === 'x'); }); };
-  const lab = new Lab($('#labKasus'), { kode: sorot, vonis: (f, g, ex) => {
+  const lab = new Lab($('#labKasus'), { kode: f => { sorot(f); isiVariabel(); }, vonis: (f, g, ex) => {
     if (ex.k === 'kurir') return `<div class="callout ok"><b>Selesai: Toko A 2, Pelanggan 4</b>, sama dengan hitung tangan. Rute: ${rute(g, f.pred, 3)}. Dijalankan 2 putaran (1 berisi perubahan, 1 konfirmasi).</div>`;
     if (ex.k === 'uang') return `<div class="callout bad"><b>Siklus negatif USD → EUR → JPY → USD (−36).</b> Setiap keliling, 1 USD menjadi 1,0368 USD. Jarak termurah tidak ada, dan inilah tanda peluang arbitrase.</div>`;
     return `<div class="callout ${ex.u === 'terbalik' ? 'bad' : 'ok'}"><b>Daftar ${ex.u}: ${f.putaranJalan} putaran, ${f.cek} pemeriksaan sisi.</b> Jawabannya sama, d = (0, 2, 5, 6). ${ex.u === 'terbalik' ? 'Seluruh batas |V| − 1 = 3 putaran terpakai.' : 'Bandingkan dengan daftar terbalik: 12 pemeriksaan.'}</div>`; } });
   let kasus = 'kurir', urutan = 'terbalik';
+  const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const kom = t => `<span class="c"># ${esc(t)}</span>`;
+  const pv = x => x === INF ? 'INF' : String(x);
+  const plist = (a, hl = -1, cls = 'hl') => '[' + a.map((x, i) => i === hl ? `<span class="${cls}">${pv(x)}</span>` : pv(x)).join(', ') + ']';
+  const ppred = (a, hl = -1) => '[' + a.map((x, i) => { const t = x < 0 ? 'None' : String(x); return i === hl ? `<span class="hl">${t}</span>` : t; }).join(', ') + ']';
+  const tf = b => `<span class="k">${b ? 'True' : 'False'}</span>`;
+  function tulisMasukan(g) {
+    const nm = g.nodes.map(n => n.label), L = [];
+    L.push(kom('simpul: ' + nm.map((x, i) => `${i} = ${x}`).join(', ')));
+    L.push(`n = ${g.nodes.length}`);
+    L.push(`edges = [` + (kasus === 'rantai' ? '   ' + kom('daftar ' + urutan) : ''));
+    g.edges.forEach(e => { const t = `    (${e.u}, ${e.v}, ${e.w}),`; L.push(t.padEnd(20) + kom(`${e.kode ? e.kode + ' ' : ''}${nm[e.u]} → ${nm[e.v]}, bobot ${e.w}`)); });
+    L.push(']');
+    L.push(`src = ${g.src}`.padEnd(20) + kom(`sumber: ${nm[g.src]}`));
+    L.push('');
+    L.push(`dist, pred, siklus = bellman_ford(n, edges, src)`);
+    $('#pyMasukan').innerHTML = L.join('\n');
+    const daftar = g.edges.length > 4 ? `${g.edges.length} tuple, mis. (${g.edges[0].u}, ${g.edges[0].v}, ${g.edges[0].w})` : g.edges.map(e => `(${e.u}, ${e.v}, ${e.w})`).join(', ');
+    const P = [
+      ['n', 'Jumlah simpul. Simpul diberi nomor 0 sampai n − 1.', `${g.nodes.length}`],
+      ['edges', 'Daftar sisi berupa tuple (u, v, w): dari simpul u ke simpul v dengan bobot w. Urutan daftar = urutan sisi diperiksa.', esc(daftar)],
+      ['src', 'Nomor simpul sumber, titik awal perhitungan.', `${g.src} (${esc(nm[g.src])})`],
+      ['berhenti_dini', 'True: berhenti begitu satu putaran tidak mengubah apa pun. False: selalu n − 1 putaran (versi baku).', 'True (bawaan)']];
+    $('#tabParam tbody').innerHTML = P.map(([a, b, c]) => `<tr><td>${a}</td><td>${b}</td><td>${c}</td></tr>`).join('');
+  }
+  function tulisKeluaran(g, F) {
+    const f = F[F.length - 1], nm = g.nodes.map(n => n.label), siklus = f.phase === 'siklus', L = [];
+    const pr = t => `<span class="pr">&gt;&gt;&gt; </span>${t}`;
+    L.push(pr('print(dist)')); L.push(plist(f.dist) + '   ' + kom(nm.join(', ')));
+    L.push(pr('print(pred)')); L.push(ppred(f.pred));
+    L.push(pr('print(siklus)')); L.push(tf(siklus));
+    if (siklus) L.push(kom('ada siklus negatif: dist tidak bisa dipakai sebagai jarak termurah'));
+    else {
+      const t = g.nodes.length - 1, jalur = []; let c = t, j = 0;
+      while (c >= 0 && j++ < 50) { jalur.unshift(c); if (c === g.src) break; c = f.pred[c]; }
+      L.push(pr(`rekonstruksi_jalur(pred, src, ${t})`));
+      L.push(`[${jalur.join(', ')}]   ` + kom(jalur.map(i => nm[i]).join(' → ') + `, biaya ${pv(f.dist[t])}`));
+    }
+    L.push(kom(`dijalankan ${f.putaranJalan} putaran, ${f.cek} pemeriksaan sisi`));
+    $('#pyKeluar').innerHTML = L.join('\n');
+  }
+  function isiVariabel() {
+    if (!lab.F) return;
+    const F = lab.F, i = lab.i, f = F[i], p = F[i - 1] || f, g = lab.g, nm = g.nodes.map(n => n.label), L = [];
+    const ubahHl = f.kind === 'u' ? f.changed : -1;
+    $('#pyKeluar').classList.toggle('siap', i === F.length - 1);
+    if (f.phase === 'init') {
+      L.push(`n = ${g.nodes.length}, src = ${g.src}`);
+      L.push(`dist = ${plist(f.dist)}`.padEnd(30) + kom('baris 1–2: semua INF kecuali sumber'));
+      L.push(`pred = ${ppred(f.pred)}`);
+    } else if (['relax', 'ujiSisi', 'siklus'].includes(f.phase)) {
+      const e = g.edges[f.active], du = p.dist[e.u], dv = p.dist[e.v];
+      if (f.phase === 'relax') L.push(`_ = ${f.putaran - 1}`.padEnd(22) + kom(`putaran ke-${f.putaran} dari for _ in range(n - 1)`));
+      else L.push(kom('di dalam ada_siklus_negatif(edges, dist)'));
+      L.push(`u, v, w = ${e.u}, ${e.v}, ${e.w}`.padEnd(22) + kom(`${nm[e.u]} → ${nm[e.v]}`));
+      L.push(`dist[u] = ${pv(du)}`);
+      if (du !== INF) L.push(`dist[u] + w = ${pv(du + e.w)}`);
+      L.push(`dist[v] = ${pv(dv)}`.padEnd(22) + kom('sebelum dibandingkan'));
+      if (du === INF) L.push(`dist[u] != INF  →  ${tf(false)}`.padEnd(22) + '   ' + kom('sisi dilewati'));
+      else L.push(`dist[u] + w &lt; dist[v]  →  ${tf(du + e.w < dv)}`);
+      L.push(`dist = ${plist(f.dist, f.phase === 'siklus' ? e.v : ubahHl, f.phase === 'siklus' ? 'bad' : 'hl')}`);
+      L.push(`pred = ${ppred(f.pred, ubahHl)}`);
+      if (f.phase === 'relax') L.push(`ada_perubahan = ${tf(f.ubah > 0)}`);
+      if (f.phase === 'siklus') L.push(`<span class="k">return True</span>`.padEnd(22) + '   ' + kom('siklus negatif ditemukan'));
+    } else if (f.phase === 'akhir') {
+      L.push(`ada_perubahan = ${tf(f.ubah > 0)}`.padEnd(22) + '   ' + kom(`akhir putaran ${f.putaran}, ${f.ubah} catatan diganti`));
+      L.push(`dist = ${plist(f.dist)}`); L.push(`pred = ${ppred(f.pred)}`);
+    } else if (f.phase === 'henti') {
+      L.push(`berhenti_dini and not ada_perubahan  →  ${tf(true)}`); L.push(`<span class="k">break</span>`.padEnd(22) + '   ' + kom('keluar dari perulangan putaran'));
+      L.push(`dist = ${plist(f.dist)}`);
+    } else if (f.phase === 'uji') {
+      L.push(kom('memanggil ada_siklus_negatif(edges, dist)'));
+      L.push(`dist = ${plist(f.dist)}`); L.push(`pred = ${ppred(f.pred)}`);
+    } else if (f.phase === 'selesai') {
+      L.push(`<span class="k">return</span> dist, pred, ${tf(false)}`);
+      L.push(`dist = ${plist(f.dist)}`); L.push(`pred = ${ppred(f.pred)}`);
+    }
+    $('#pyVar').innerHTML = L.join('\n');
+  }
   const muat = () => {
     $$('#tabKasus button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === kasus));
     $$('#urutanRantai button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === urutan));
@@ -911,6 +989,7 @@ function rute(g, pred, v) { const out = []; let c = v, j = 0; while (c >= 0 && j
     const jalan = Math.max(...F.map(f => typeof f.putaran === 'number' ? f.putaran : 0));
     F.forEach(f => f.putaranJalan = jalan);
     lab.load(g, F, { k: kasus, u: urutan });
+    tulisMasukan(g); tulisKeluaran(g, F); isiVariabel();
   };
   $('#tabKasus').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { kasus = b.dataset.k; muat(); } });
   $('#urutanRantai').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { urutan = b.dataset.k; muat(); } });
@@ -943,6 +1022,7 @@ const angka = (x, nd = 0) => x.toLocaleString('id-ID', { maximumFractionDigits: 
   ];
   $('#berat').innerHTML = B.map(([j, t, fx]) => `<li><div><b>${j}</b><span class="muted">${t}</span></div><span class="fx">${fx}</span></li>`).join('');
   $('#rAcak').textContent = `${angka(D.rMin, 1)} sampai ${angka(D.rMax, 1)}`;
+  if (!$('#kV')) return;   // versi singkat: kalkulator dan grafik tidak dimuat
 
   const hitung = () => {
     const V = Math.max(2, Math.floor(+$('#kV').value || 2)), rasio = Math.max(1, +$('#kR').value || 1), k = $('#kK').value, E = Math.round(V * rasio);
@@ -981,25 +1061,25 @@ const angka = (x, nd = 0) => x.toLocaleString('id-ID', { maximumFractionDigits: 
 const DUNIA = {
   rip: { view: '0 0 640 300', nodes: [['R1', 90, 150], ['R2', 320, 62], ['R3', 550, 150], ['R4', 320, 238]],
     edges: [[0, 1, 1], [1, 0, 1], [1, 2, 1], [2, 1, 1], [0, 3, 1], [3, 0, 1], [3, 2, 1], [2, 3, 1]],
-    cerita: 'Empat router. Tiap kabel berbobot 1 lompatan dan berlaku dua arah. Router R1 menghitung jarak ke semua router dari tabel yang dikirim tetangganya, dengan aturan relaksasi yang sama.',
+    cerita: '4 router · tiap kabel 1 lompatan, dua arah · tabel dihitung dari R1',
     vonis: (f, g) => `<div class="callout ok"><b>Tabel routing R1:</b> R2 ${fmt(f.dist[1])} lompatan, R4 ${fmt(f.dist[3])}, R3 ${fmt(f.dist[2])} (lewat ${rute(g, f.pred, 2)}). Pada RIP, jarak 16 dianggap tak terjangkau.</div>` },
   arbitrase: { view: '0 0 640 320', nodes: [['IDR', 110, 245], ['USD', 320, 72], ['SGD', 530, 245]],
     edges: [[0, 1, 9680], [1, 2, -300], [2, 0, -9393]],
-    cerita: 'Kurs rekaan: 1 IDR = 0,0000625 USD, 1 USD = 1,35 SGD, 1 SGD = 12.000 IDR. Hasil kalinya 1,0125. Bobot = −1000·ln(kurs): 9680, −300, dan −9393, yang jumlahnya −13.',
+    cerita: 'IDR → USD → SGD · hasil kali kurs 1,0125 · bobot 9680, −300, −9393 (total −13)',
     vonis: () => '<div class="callout bad"><b>Siklus negatif IDR → USD → SGD → IDR (−13).</b> Menukar keliling memberi untung 1,25% tiap putaran. Sistem pendeteksi arbitrase mencari siklus seperti ini.</div>' },
   johnson: { view: '0 0 640 300', nodes: [['q', 80, 150], ['A', 300, 62], ['B', 300, 238], ['C', 540, 150]],
     edges: [[0, 1, 0], [0, 2, 0], [0, 3, 0], [1, 2, -2], [2, 3, -1], [1, 3, 4]],
-    cerita: 'Graf A, B, C punya bobot negatif tetapi tanpa siklus negatif. Johnson menambah titik bayangan q dengan sisi 0 ke setiap titik, lalu menjalankan Bellman-Ford dari q untuk mendapat potensial h(v).',
+    cerita: 'q = titik bayangan, jalan 0 ke semua titik · Bellman-Ford dari q memberi geseran h(v)',
     vonis: f => { const h = f.dist, b = [[1, 2, -2], [2, 3, -1], [1, 3, 4]].map(([u, v, w]) => w + h[u] - h[v]);
       return `<div class="callout ok"><b>h = (A ${fmt(h[1])}, B ${fmt(h[2])}, C ${fmt(h[3])}).</b> Bobot baru w + h(u) − h(v): A→B ${fmt(b[0])}, B→C ${fmt(b[1])}, A→C ${fmt(b[2])}. Semuanya ≥ 0, jadi Dijkstra kini aman dipakai dari setiap titik.</div>`; } },
   jadwal: { view: '0 0 640 300', nodes: [['s', 80, 150], ['A', 300, 62], ['B', 300, 238], ['C', 540, 150]],
     edges: [[0, 1, 0], [0, 2, 0], [0, 3, 0], [1, 2, 3], [2, 1, -1], [2, 3, 2], [3, 1, -4]],
-    cerita: 'Batasan: B paling lambat 3 jam sesudah A (A→B, 3), B paling cepat 1 jam sesudah A (B→A, −1), C paling lambat 2 jam sesudah B (B→C, 2), C paling cepat 4 jam sesudah A (C→A, −4). Titik s terhubung ke semua tugas dengan bobot 0.',
+    cerita: 'A→B 3 · B→A −1 · B→C 2 · C→A −4 · s ke semua 0 · biaya termurah = jam mulai',
     vonis: f => { const x = f.dist.slice(1), g0 = -Math.min(...x), j = x.map(v => v + g0);
       return `<div class="callout ok"><b>Jadwal ditemukan:</b> A mulai jam ${j[0]}, B jam ${j[1]}, C jam ${j[2]} (hasil d digeser +${g0}). Keempat batasan terpenuhi. Kalau batasannya saling bertentangan, akan muncul siklus negatif.</div>`; } },
   logistik: { view: '0 0 640 280', nodes: [['Makassar', 90, 90], ['Maros', 250, 215], ['Pangkep', 400, 90], ['Barru', 560, 90]],
     edges: [[2, 3, -20, 'R2'], [0, 2, 100, 'R3'], [0, 1, 40, 'R6'], [1, 2, 50, 'R9']],
-    cerita: 'Potongan peta bagian 4. Ruas R2 (Pangkep → Barru) membawa muatan balik: biaya 60, pendapatan 80, jadi bersih −20. Daftar ruas diperiksa menurut urutan kontrak: R2, R3, R6, R9.',
+    cerita: 'R2 Pangkep → Barru: 60 − 80 = −20 · urutan cek R2, R3, R6, R9',
     vonis: (f, g) => `<div class="callout ok"><b>Barru ${fmt(f.dist[3])} ribu rupiah per ton</b> lewat ${rute(g, f.pred, 3)}, lebih murah daripada Pangkep (${fmt(f.dist[2])}) karena ruas terakhir memberi untung.</div>` }
 };
 $$('details.demo').forEach(det => {
@@ -1026,35 +1106,26 @@ $$('details.demo').forEach(det => {
 (function () {
   const P = DATA.pres, k2 = (x, n = 2) => x.toLocaleString('id-ID', { minimumFractionDigits: n, maximumFractionDigits: n });
   const r0 = x => Math.round(x).toLocaleString('id-ID');
-  // tabel kemiringan
-  const baris = [['Paling lambat (rantai terbalik)', P.miring.terburuk, '2', '|V| · |E| dengan |E| = 4|V|, jadi kuadrat'],
-                 ['Paling cepat (rantai searah)', P.miring.terbaik, '1', 'sebanding banyaknya jalan'],
-                 ['Biasanya (graf acak)', P.miring.acak, `± ${k2(P.miringOps)}`, 'banyaknya pemeriksaan tumbuh dengan pangkat ' + k2(P.miringOps)]];
-  $('#tabMiring tbody').innerHTML = baris.map(([a, m, t, ket]) => `<tr><td>${a}<br><span class="muted" style="font-size:.85rem">${ket}</span></td><td class="num mono">${k2(m)}</td><td class="num mono">${t}</td></tr>`).join('');
-  $('#bacaGrafik').innerHTML = `<p>Dua garis cocok dengan teorinya: kasus paling lambat naik dengan pangkat ${k2(P.miring.terburuk)} (teori 2), dan kasus paling cepat ${k2(P.miring.terbaik)} (teori 1).</p>`
-    + `<p>Graf acak lebih curam dari perkiraan (${k2(P.miring.acak)}). Banyaknya pemeriksaan tetap sesuai teori, tetapi waktu per pemeriksaan naik dari ${r0(DATA.ns0)} ke ${r0(DATA.ns1)} nanodetik pada graf besar. Dugaan kami, penyebabnya akses memori yang tersebar.</p>`;
+  // tabel kemiringan, versi singkat
+  const baris = [['Paling lambat', P.miring.terburuk, '2'], ['Paling cepat', P.miring.terbaik, '1'], ['Acak', P.miring.acak, '± ' + k2(P.miringOps)]];
+  if ($('#tabMiring')) $('#tabMiring tbody').innerHTML = baris.map(([a, m, t]) => `<tr><td>${a}</td><td class="num mono">${k2(m)}</td><td class="num mono">${t}</td></tr>`).join('');
+  if ($('#bacaGrafik')) $('#bacaGrafik').innerHTML = `<li>Paling lambat ${k2(P.miring.terburuk)} ≈ 2, paling cepat ${k2(P.miring.terbaik)} ≈ 1 → <b>cocok teori</b></li>`
+    + `<li>Acak lebih curam: waktu per pemeriksaan ${r0(DATA.ns0)} → ${r0(DATA.ns1)} ns (dugaan: memori)</li>`;
   const hn = P.henti[P.henti.length - 1], dj = P.dijk.map(x => x[1]), sb = P.scipyBuruk.map(x => x[1]), sk = P.scipyBaik[P.scipyBaik.length - 1];
-  const T = [
-    ['Berhenti lebih awal', `${r0(hn[1])}×`, `lebih cepat pada graf acak ${r0(hn[0])} titik. Tanpa itu, semua |V| − 1 putaran dijalankan walau jawabannya sudah final.`],
-    ['Dijkstra', `${k2(Math.min(...dj), 1)}–${k2(Math.max(...dj), 1)}×`, 'lebih cepat ketika semua biaya positif. Selisihnya tidak besar pada graf acak, karena Bellman-Ford pun hanya butuh belasan putaran.']
-  ];
-  $('#temuan').innerHTML = T.map(([j, n, t]) => `<article class="panel"><p class="kicker">${j}</p><p class="num">${n}</p><p>${t}</p></article>`).join('');
+  const T = [['Henti dini', `${r0(hn[1])}×`, `lebih cepat (acak, ${r0(hn[0])} titik)`],
+             ['Dijkstra', `${k2(Math.min(...dj), 1)}–${k2(Math.max(...dj), 1)}×`, 'lebih cepat bila semua biaya positif']];
+  if ($('#temuan')) $('#temuan').innerHTML = T.map(([j, n, t]) => `<article class="panel"><p class="kicker">${j}</p><p class="num">${n}</p><p class="muted">${t}</p></article>`).join('');
+  const B = [['Urutan sisi terbalik', 'Rantai 4 simpul: 12 pemeriksaan, padahal urutan searah cukup 9.'],
+             ['Tidak berhenti lebih awal', `Graf acak 4.000 simpul: ${r0(hn[1])} kali lebih lambat daripada versi yang berhenti lebih awal.`],
+             ['Graf sangat besar', 'Setiap putaran memeriksa semua sisi. Rantai 12.800 simpul pada urutan terburuk butuh sekitar 40 detik.']];
+  $('#beratRingkas').innerHTML = B.map(([j, c]) => `<article class="panel"><p class="kicker">Yang bikin lambat</p><b>${j}</b><span class="muted">${c}</span></article>`).join('');
   $('#kesMiring').textContent = k2(P.miring.terburuk);
   $$('.nsA').forEach(e => e.textContent = r0(DATA.ns0)); $$('.nsB').forEach(e => e.textContent = r0(DATA.ns1));
   $$('.scipyB').forEach(e => e.textContent = r0(sk[1]));
 
-  // pengatur waktu 15 menit
-  let sisa = 900, jalan = null;
-  const tampil = () => { const m = Math.floor(Math.abs(sisa) / 60), s = Math.abs(sisa) % 60; $('#tmr').textContent = (sisa < 0 ? '−' : '') + m + ':' + String(s).padStart(2, '0'); $('#tmr').classList.toggle('habis', sisa <= 0); };
-  $('#tmrBtn').addEventListener('click', () => {
-    if (jalan) { clearInterval(jalan); jalan = null; $('#tmrBtn').textContent = '▶'; return; }
-    jalan = setInterval(() => { sisa--; tampil(); }, 1000); $('#tmrBtn').textContent = '❚❚';
-  });
-  $('#tmrReset').addEventListener('click', () => { sisa = 900; tampil(); });
-  tampil();
 
   // tombol panah untuk pindah bagian
-  const bagian = ['mulai', 'masalah', 'ide', 'dijkstra', 'kasus', 'benar', 'kerja', 'eksperimen', 'nyata', 'plusminus', 'dunia', 'kesimpulan', 'tanya'].map(id => document.getElementById(id));
+  const bagian = ['mulai', 'masalah', 'ide', 'dijkstra', 'kasus', 'nyata', 'plusminus', 'bigo', 'dunia', 'kesimpulan', 'sumber'].map(id => document.getElementById(id));
   addEventListener('keydown', e => {
     const t = e.target;
     if ((t && t.closest && t.closest('input, select, textarea')) || e.altKey || e.ctrlKey || e.metaKey) return;
@@ -1067,4 +1138,15 @@ $$('details.demo').forEach(det => {
   });
 })();
 
+</script>
+
+<script>
+(() => {
+  const b = document.getElementById('ilmiahBtn');
+  const set = on => { document.body.classList.toggle('tanpa-ilmiah', !on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); };
+  let on = true;
+  try { on = localStorage.getItem('bf-ilmiah') !== '0'; } catch (e) {}
+  set(on);
+  b.addEventListener('click', () => { on = !on; set(on); try { localStorage.setItem('bf-ilmiah', on ? '1' : '0'); } catch (e) {} });
+})();
 </script>
